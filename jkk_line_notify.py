@@ -502,11 +502,11 @@ def build_detail_url_from_row(tr) -> str:
     """
     a = tr.find("a", onclick=True)
     if not a:
-        return TARGET_URL
+        return CHINTAI_URL
     args = extract_senpage_args(a.get("onclick") or "")
     if not args:
         href = (a.get("href") or "").strip()
-        return urljoin(TARGET_URL, href) if href else TARGET_URL
+        return urljoin(TARGET_URL, href) if href else CHINTAI_URL
     return format_detail_url(args)
 
 
@@ -934,7 +934,7 @@ def detect_changes(
                 "increase": now_count,
                 "current_total": now_count,
                 "reason": "new",
-                "detail_url": url_by_name.get(name, TARGET_URL),
+                "detail_url": url_by_name.get(name, CHINTAI_URL),
                 "cur_rooms": cur_rooms,
                 "prv_rooms": {},
             })
@@ -946,7 +946,7 @@ def detect_changes(
                 "increase": now_count - prev_count,
                 "current_total": now_count,
                 "reason": "increase",
-                "detail_url": url_by_name.get(name, TARGET_URL),
+                "detail_url": url_by_name.get(name, CHINTAI_URL),
                 "cur_rooms": cur_rooms,
                 "prv_rooms": prv_rooms,
             })
@@ -958,7 +958,7 @@ def detect_changes(
                 "increase": 0,
                 "current_total": now_count,
                 "reason": "rotation",
-                "detail_url": url_by_name.get(name, TARGET_URL),
+                "detail_url": url_by_name.get(name, CHINTAI_URL),
                 "cur_rooms": cur_rooms,
                 "prv_rooms": prv_rooms,
             })
@@ -1106,7 +1106,7 @@ def send_daily_report() -> None:
             for room, cnt in sorted(rooms.items()):
                 lines.append(f"  {room}: {cnt}戸")
         lines.append(f"\n合計: {len(saved)}物件 / {total_units}戸")
-        lines.append(f"詳細はこちら: {TARGET_URL}")
+        lines.append(f"詳細はこちら: {CHINTAI_URL}")
         text = "\n".join(lines)
 
     print(f"[INFO] 日次レポート送信:\n{text}\n")
@@ -1134,7 +1134,7 @@ def send_test_message() -> None:
         "increase": 1,
         "current_total": total,
         "reason": "increase",
-        "detail_url": TARGET_URL,
+        "detail_url": CHINTAI_URL,
         "cur_rooms": rooms,
         "prv_rooms": {k: max(0, v - 1) for k, v in rooms.items()},
     }
