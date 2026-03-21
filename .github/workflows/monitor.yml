@@ -1,0 +1,62 @@
+name: JKK 空き家監視
+
+on:
+  schedule:
+    # 10分おきに実行（UTC基準 / 日本時間 = UTC+9）
+    # GitHub Actions のスケジューラは高負荷時に数分遅延する場合があります
+    - cron: "*/10 * * * *"
+  # 手動実行も可能にしておく
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # 状態ファイルを git push するために必要
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          # push 用に PAT または GITHUB_TOKEN を使用
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Python 3.12 をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: 依存パッケージをインストール
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          # Playwright（将来の JavaScript レンダリング対応用）
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: JKK 監視スクリプトを実行
+        env:
+          # LINE Messaging API
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_TO: ${{ secrets.LINE_USER_ID }}
+          # 状態ファイル保存先（リポジトリルート）
+          JKK_DATA_DIR: ${{ github.workspace }}
+          # 必要に応じて詳細 URL を上書き
+          JKK_DETAIL_VIEW_BASE: ${{ secrets.JKK_DETAIL_VIEW_BASE }}
+        run: python jkk_line_notify.py
+
+      - name: 状態ファイルが更新されていれば自動コミット & プッシュ
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # last_data.json / last_rooms.json に変更があるか確認
+          git add last_data.json last_rooms.json 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "状態ファイルに変更なし。コミットをスキップします。"
+          else
+            git commit -m "chore: 状態ファイルを更新 [skip ci]"
+            git push
+          fi

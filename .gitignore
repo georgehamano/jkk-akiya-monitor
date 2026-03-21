@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# 状態ファイル（初回は空で作成 → Actions が上書き保存）
+# last_data.json と last_rooms.json はバージョン管理に含める（差分保存のため）
+
+# デバッグ出力
+jkk_notify_debug.html
+jkk_debug.html
+
+# ローカル開発用一時ファイル
+*.html
+!jkk_sample_table.html
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
