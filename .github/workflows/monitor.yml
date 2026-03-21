@@ -5,11 +5,17 @@ on:
     # 10分おきに実行（UTC基準 / 日本時間 = UTC+9）
     # GitHub Actions のスケジューラは高負荷時に数分遅延する場合があります
     - cron: "*/10 * * * *"
+    # 毎朝8時（JST）に日次レポートを送信（UTC 23:00 = JST 08:00）
+    - cron: "0 23 * * *"
   # 手動実行も可能にしておく
   workflow_dispatch:
     inputs:
       test:
         description: "テスト送信（LINEにサンプル通知を送る）"
+        type: boolean
+        default: false
+      daily:
+        description: "日次レポート送信（在庫状況まとめ）"
         type: boolean
         default: false
 
@@ -55,6 +61,8 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.test }}" = "true" ]; then
             python jkk_line_notify.py --test
+          elif [ "${{ github.event.inputs.daily }}" = "true" ] || [ "${{ github.event.schedule }}" = "0 23 * * *" ]; then
+            python jkk_line_notify.py --daily
           else
             python jkk_line_notify.py
           fi

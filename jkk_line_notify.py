@@ -1082,6 +1082,41 @@ def main() -> None:
         print(f"[INFO] {len(changes)}件の更新を検知（通知は未送信/失敗）。")
 
 
+def send_daily_report() -> None:
+    """--daily フラグ用: 保存済みの在庫状況を日次レポートとして送信する。"""
+    import datetime
+    ensure_data_dir()
+    saved = load_json(LAST_DATA_FILE, {})
+    saved_detail = load_json(LAST_DETAIL_FILE, {})
+
+    jst = datetime.timezone(datetime.timedelta(hours=9))
+    today = datetime.datetime.now(jst)
+    weekday = ["月", "火", "水", "木", "金", "土", "日"][today.weekday()]
+    date_str = f"{today.month}月{today.day}日({weekday})"
+
+    if not saved:
+        text = f"【JKK 在庫状況】{date_str}\n\n現在、空き家情報はありません。"
+    else:
+        lines = [f"【JKK 在庫状況】{date_str}\n"]
+        total_units = 0
+        for name, count in saved.items():
+            total_units += count
+            rooms = saved_detail.get(name, {})
+            lines.append(f"▶ {name}: {count}戸")
+            for room, cnt in sorted(rooms.items()):
+                lines.append(f"  {room}: {cnt}戸")
+        lines.append(f"\n合計: {len(saved)}物件 / {total_units}戸")
+        lines.append(f"詳細はこちら: {TARGET_URL}")
+        text = "\n".join(lines)
+
+    print(f"[INFO] 日次レポート送信:\n{text}\n")
+    sent = send_line_push([{"type": "text", "text": text[:5000]}])
+    if sent:
+        print("[INFO] 日次レポート送信成功。")
+    else:
+        print("[WARN] 日次レポート送信失敗（LINE設定を確認してください）。")
+
+
 def send_test_message() -> None:
     """--test フラグ用: 現在の last_data.json の先頭1件を使ってテスト通知を送る。"""
     ensure_data_dir()
@@ -1116,5 +1151,7 @@ if __name__ == "__main__":
     import sys
     if "--test" in sys.argv:
         send_test_message()
+    elif "--daily" in sys.argv:
+        send_daily_report()
     else:
         main()
