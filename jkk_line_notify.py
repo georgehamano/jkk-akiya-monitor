@@ -274,7 +274,8 @@ def try_submit_first_form(
                 )
             r.raise_for_status()
             html2 = decode_html_response(r)
-            if parse_properties(html2):
+            props = parse_properties(html2)
+            if props:
                 return html2
         except requests.RequestException:
             continue
@@ -651,6 +652,101 @@ def save_debug_html(html: str) -> Path:
     return path
 
 
+def _collect_form_data(soup: BeautifulSoup, max_showcount: bool = False) -> tuple[dict[str, str], str | None]:
+    """
+    frmMain フォームの全フィールド値を収集して返す。
+    max_showcount=True のとき akiyaRefRM.showCount を最大値に設定する。
+    戻り値: (form_data, form_name)
+    """
+    form = soup.find("form", {"name": "frmMain"}) or soup.find("form")
+    if not form:
+        return {}, None
+    form_name = form.get("name")
+    data: dict[str, str] = {}
+    for tag in form.find_all(["input", "select"]):
+        name = (tag.get("name") or "").strip()
+        if not name:
+            continue
+        if tag.name == "select":
+            if max_showcount and name == "akiyaRefRM.showCount":
+                # 最大オプション値を取得
+                options = tag.find_all("option")
+                if options:
+                    vals = [o.get("value", "") for o in options if o.get("value")]
+                    data[name] = max(vals, key=lambda v: int(v) if v.isdigit() else 0)
+                else:
+                    data[name] = tag.get("value") or ""
+            else:
+                selected = tag.find("option", selected=True) or (tag.find("option") or None)
+                data[name] = selected.get("value", "") if selected else ""
+        else:
+            data[name] = str(tag.get("value") or "")
+    return data, form_name
+
+
+def try_get_all_with_showcount(
+    session: requests.Session,
+    html: str,
+    base_url: str,
+) -> list[dict[str, Any]]:
+    """
+    akiyaRefRM.showCount を最大値（50）にして AKIYAchangeCount へ POST し、
+    全件を1ページで取得を試みる。成功した行リストを返す。失敗時は空リスト。
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    data, _ = _collect_form_data(soup, max_showcount=True)
+    if "akiyaRefRM.showCount" not in data:
+        return []
+    count_url = urljoin(base_url, "AKIYAchangeCount")
+    try:
+        print(f"[INFO] showCount={data['akiyaRefRM.showCount']} で全件取得を試行: {count_url}")
+        r = session.post(
+            count_url,
+            data=data,
+            timeout=30,
+            headers={**HEADERS, "Referer": base_url},
+        )
+        r.raise_for_status()
+        html2 = decode_html_response(r)
+        rows = parse_properties(html2)
+        print(f"[INFO] showCount 全件取得結果: {len(rows)} 件")
+        return rows
+    except requests.RequestException as exc:
+        print(f"[WARN] showCount 全件取得失敗: {exc}")
+        return []
+
+
+def extract_paging_form_requests(
+    html: str, base_url: str
+) -> list[tuple[str, dict[str, str]]]:
+    """
+    JKK の JavaScript ページネーション
+    `movePagingInputGridPageAbs('pageNum', 'HASH')` を解析し、
+    各追加ページを取得するための (action_url, form_data) のリストを返す。
+    action URL は submitAction の動作に従い service/ 配下に解決する。
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    base_data, _ = _collect_form_data(soup)
+
+    # service/ 配下の AKIYApageNum エンドポイント
+    service_base = re.sub(r"/[^/]+$", "/", base_url)  # 末尾のパスセグメントを除去
+    page_action_url = urljoin(service_base, "AKIYApageNum")
+
+    pat = re.compile(
+        r"movePagingInputGridPageAbs\s*\(\s*'(\w+)'\s*,\s*'([^']+)'\s*\)", re.I
+    )
+    seen: set[str] = set()
+    result: list[tuple[str, dict[str, str]]] = []
+    for a in soup.find_all("a"):
+        m = pat.search(a.get("onclick") or "")
+        if m:
+            field, hash_val = m.group(1), m.group(2)
+            if hash_val not in seen:
+                seen.add(hash_val)
+                result.append((page_action_url, {**base_data, field: hash_val}))
+    return result
+
+
 def extract_next_page_url(html: str, base_url: str) -> str | None:
     """
     ページネーションの「次の○件」「次ページ」リンクを探して URL を返す。
@@ -676,6 +772,7 @@ def collect_all_rows(
 ) -> list[dict[str, Any]]:
     """
     1ページ目の HTML からページネーションを辿り、全ページの行を結合して返す。
+    href ベースのリンクが無い場合は JKK の JavaScript フォームページネーションを使う。
     """
     all_rows: list[dict[str, Any]] = []
     html = first_html
@@ -692,22 +789,54 @@ def collect_all_rows(
         print(f"[INFO] ページ {page_num}: {len(rows)} 件取得 ({url})")
         all_rows.extend(rows)
 
+        # href ベースの次ページを優先
         next_url = extract_next_page_url(html, url)
-        if not next_url or next_url.rstrip("/") in visited:
+        if next_url and next_url.rstrip("/") not in visited:
+            try:
+                res = session.get(
+                    next_url,
+                    timeout=30,
+                    headers={**HEADERS, "Referer": url},
+                )
+                res.raise_for_status()
+                html = decode_html_response(res)
+                url = res.url
+                continue
+            except requests.RequestException as exc:
+                print(f"[WARN] ページ {page_num + 1} 取得失敗（ここまでの結果を使用）: {exc}")
+                break
+
+        # JKK 形式: 1ページ目のみ追加ページを処理
+        if page_num == 1:
+            # 優先: showCount=50 で全件を1回のリクエストで取得
+            full_rows = try_get_all_with_showcount(session, html, url)
+            if full_rows:
+                # 1ページ目の行を置き換えて全件採用
+                all_rows = full_rows
+                break
+
+            # フォールバック: movePagingInputGridPageAbs でページ別取得
+            paging_requests = extract_paging_form_requests(html, url)
+            if paging_requests:
+                print(f"[INFO] フォームページネーション: 追加 {len(paging_requests)} ページを取得")
+                for i, (action_url, form_data) in enumerate(paging_requests, start=2):
+                    try:
+                        res2 = session.post(
+                            action_url,
+                            data=form_data,
+                            timeout=30,
+                            headers={**HEADERS, "Referer": url},
+                        )
+                        res2.raise_for_status()
+                        html2 = decode_html_response(res2)
+                        rows2 = parse_properties(html2)
+                        print(f"[INFO] ページ {i}: {len(rows2)} 件取得")
+                        all_rows.extend(rows2)
+                    except requests.RequestException as exc:
+                        print(f"[WARN] ページ {i} 取得失敗: {exc}")
             break
 
-        try:
-            res = session.get(
-                next_url,
-                timeout=30,
-                headers={**HEADERS, "Referer": url},
-            )
-            res.raise_for_status()
-            html = decode_html_response(res)
-            url = res.url
-        except requests.RequestException as exc:
-            print(f"[WARN] ページ {page_num + 1} 取得失敗（ここまでの結果を使用）: {exc}")
-            break
+        break  # それ以上のページなし
 
     print(f"[INFO] 全ページ合計: {len(all_rows)} 行")
     return all_rows
