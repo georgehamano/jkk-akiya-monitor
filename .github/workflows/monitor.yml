@@ -55,7 +55,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # last_data.json / last_rooms.json に変更があるか確認
-          git add last_data.json last_rooms.json 2>/dev/null || true
+          git add last_data.json last_rooms.json last_rooms_detail.json 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "状態ファイルに変更なし。コミットをスキップします。"

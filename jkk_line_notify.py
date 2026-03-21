@@ -42,8 +42,9 @@ _DEFAULT_DETAIL_QUERY_TEMPLATE = "danchi={p3}&room={p2}"
 # Colab / GitHub Actions など別パスにしたい場合は JKK_DATA_DIR を設定。
 _SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.getenv("JKK_DATA_DIR", str(_SCRIPT_DIR))).resolve()
-LAST_DATA_FILE = DATA_DIR / "last_data.json"  # 必須要件: 物件名 -> 件数
-LAST_ROOMS_FILE = DATA_DIR / "last_rooms.json"  # 30→30の入れ替わり検知用
+LAST_DATA_FILE = DATA_DIR / "last_data.json"        # 物件名 -> 合算件数
+LAST_ROOMS_FILE = DATA_DIR / "last_rooms.json"      # 入れ替わり検知用ハッシュ
+LAST_DETAIL_FILE = DATA_DIR / "last_rooms_detail.json"  # 間取り別件数
 
 HEADERS = {
     "User-Agent": (
@@ -872,6 +873,20 @@ def build_room_fingerprint(rows: list[dict[str, Any]]) -> dict[str, str]:
     return fingerprint
 
 
+def build_room_detail_map(rows: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """
+    間取り別件数を物件ごとに集計する。
+    戻り値: { "物件名": { "間取り": 件数, ... }, ... }
+    """
+    result: dict[str, dict[str, int]] = {}
+    for r in rows:
+        name = str(r["name"])
+        room = str(r["room"] or "-")
+        count = int(r["count"])
+        result.setdefault(name, {})[room] = result.get(name, {}).get(room, 0) + count
+    return result
+
+
 def load_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
@@ -892,6 +907,8 @@ def detect_changes(
     prev_map: dict[str, int],
     current_fp: dict[str, str],
     prev_fp: dict[str, str],
+    current_detail: dict[str, dict[str, int]],
+    prev_detail: dict[str, dict[str, int]],
     rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
@@ -899,8 +916,8 @@ def detect_changes(
     - 前回より件数が増えた
     - 前回存在しなかった物件が出現
     - 件数同一でも号室内訳が変化（入れ替わり）
+    各エントリに間取り別の現在件数と前回件数を含める。
     """
-    # 同一住宅名で複数行ある場合は最初に見つかった詳細URL（テンプレ未設定なら一覧URL）
     url_by_name: dict[str, str] = {}
     for r in rows:
         url_by_name.setdefault(r["name"], r["detail_url"])
@@ -908,42 +925,43 @@ def detect_changes(
     notices: list[dict[str, Any]] = []
     for name, now_count in current_map.items():
         prev_count = prev_map.get(name)
+        cur_rooms = current_detail.get(name, {})
+        prv_rooms = prev_detail.get(name, {})
 
         if prev_count is None:
-            notices.append(
-                {
-                    "name": name,
-                    "increase": now_count,
-                    "current_total": now_count,
-                    "reason": "new",
-                    "detail_url": url_by_name.get(name, TARGET_URL),
-                }
-            )
+            notices.append({
+                "name": name,
+                "increase": now_count,
+                "current_total": now_count,
+                "reason": "new",
+                "detail_url": url_by_name.get(name, TARGET_URL),
+                "cur_rooms": cur_rooms,
+                "prv_rooms": {},
+            })
             continue
 
         if now_count > prev_count:
-            notices.append(
-                {
-                    "name": name,
-                    "increase": now_count - prev_count,
-                    "current_total": now_count,
-                    "reason": "increase",
-                    "detail_url": url_by_name.get(name, TARGET_URL),
-                }
-            )
+            notices.append({
+                "name": name,
+                "increase": now_count - prev_count,
+                "current_total": now_count,
+                "reason": "increase",
+                "detail_url": url_by_name.get(name, TARGET_URL),
+                "cur_rooms": cur_rooms,
+                "prv_rooms": prv_rooms,
+            })
             continue
 
-        # 30->30でも内訳変更を通知対象にする
         if now_count == prev_count and current_fp.get(name) != prev_fp.get(name):
-            notices.append(
-                {
-                    "name": name,
-                    "increase": 0,
-                    "current_total": now_count,
-                    "reason": "rotation",
-                    "detail_url": url_by_name.get(name, TARGET_URL),
-                }
-            )
+            notices.append({
+                "name": name,
+                "increase": 0,
+                "current_total": now_count,
+                "reason": "rotation",
+                "detail_url": url_by_name.get(name, TARGET_URL),
+                "cur_rooms": cur_rooms,
+                "prv_rooms": prv_rooms,
+            })
 
     return notices
 
@@ -951,17 +969,37 @@ def detect_changes(
 def build_line_messages(changes: list[dict[str, Any]]) -> list[dict[str, str]]:
     messages: list[dict[str, str]] = []
     for c in changes:
-        reason_text = ""
-        if c["reason"] == "new":
-            reason_text = "（新規掲載）"
-        elif c["reason"] == "rotation":
-            reason_text = "（在庫内訳の入れ替わり）"
+        reason_label = {"new": "新規掲載", "increase": "増加", "rotation": "内訳変更"}.get(
+            c["reason"], c["reason"]
+        )
 
+        # 間取り別内訳行を生成
+        cur: dict[str, int] = c.get("cur_rooms", {})
+        prv: dict[str, int] = c.get("prv_rooms", {})
+        all_rooms = sorted(set(cur) | set(prv))
+        room_lines: list[str] = []
+        for room in all_rooms:
+            now_cnt = cur.get(room, 0)
+            prv_cnt = prv.get(room, 0)
+            if prv_cnt == 0 and now_cnt > 0:
+                room_lines.append(f"  {room}: {now_cnt}戸 ★新規")
+            elif now_cnt > prv_cnt:
+                room_lines.append(f"  {room}: {now_cnt}戸（前回: {prv_cnt}戸 +{now_cnt - prv_cnt}）")
+            elif now_cnt < prv_cnt:
+                room_lines.append(f"  {room}: {now_cnt}戸（前回: {prv_cnt}戸 -{prv_cnt - now_cnt}）")
+            elif now_cnt > 0:
+                room_lines.append(f"  {room}: {now_cnt}戸")
+
+        room_block = "\n".join(room_lines) if room_lines else "  （内訳情報なし）"
+
+        increase_str = f"+{c['increase']}" if c["increase"] > 0 else "±0"
         text = (
-            "【JKK 空き家状況更新】\n"
+            f"【JKK 空き家状況更新】（{reason_label}）\n"
             f"物件名: {c['name']}\n"
-            f"増えた件数: +{c['increase']} {reason_text}\n"
-            f"現在の総数: {c['current_total']}\n"
+            f"─────────────\n"
+            f"{room_block}\n"
+            f"─────────────\n"
+            f"合計: {c['current_total']}戸（{increase_str}）\n"
             f"詳細URL: {c['detail_url']}"
         )
         messages.append({"type": "text", "text": text[:5000]})
@@ -1017,15 +1055,20 @@ def main() -> None:
 
     current_map = build_property_map(rows)
     current_fp = build_room_fingerprint(rows)
+    current_detail = build_room_detail_map(rows)
 
     prev_map = load_json(LAST_DATA_FILE, {})
     prev_fp = load_json(LAST_ROOMS_FILE, {})
+    prev_detail = load_json(LAST_DETAIL_FILE, {})
 
-    changes = detect_changes(current_map, prev_map, current_fp, prev_fp, rows)
+    changes = detect_changes(
+        current_map, prev_map, current_fp, prev_fp, current_detail, prev_detail, rows
+    )
 
     # 成否に関係なく今回状態は保存
     save_json(LAST_DATA_FILE, current_map)
     save_json(LAST_ROOMS_FILE, current_fp)
+    save_json(LAST_DETAIL_FILE, current_detail)
 
     if not changes:
         print("[INFO] 在庫増・新規・内訳入れ替わりはありません。")
