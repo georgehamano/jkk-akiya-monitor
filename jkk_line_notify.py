@@ -502,11 +502,11 @@ def build_detail_url_from_row(tr) -> str:
     """
     a = tr.find("a", onclick=True)
     if not a:
-        return JH_WARMUP_URL
+        return TARGET_URL
     args = extract_senpage_args(a.get("onclick") or "")
     if not args:
         href = (a.get("href") or "").strip()
-        return urljoin(TARGET_URL, href) if href else JH_WARMUP_URL
+        return urljoin(TARGET_URL, href) if href else TARGET_URL
     return format_detail_url(args)
 
 
@@ -934,7 +934,7 @@ def detect_changes(
                 "increase": now_count,
                 "current_total": now_count,
                 "reason": "new",
-                "detail_url": url_by_name.get(name, JH_WARMUP_URL),
+                "detail_url": url_by_name.get(name, TARGET_URL),
                 "cur_rooms": cur_rooms,
                 "prv_rooms": {},
             })
@@ -946,7 +946,7 @@ def detect_changes(
                 "increase": now_count - prev_count,
                 "current_total": now_count,
                 "reason": "increase",
-                "detail_url": url_by_name.get(name, JH_WARMUP_URL),
+                "detail_url": url_by_name.get(name, TARGET_URL),
                 "cur_rooms": cur_rooms,
                 "prv_rooms": prv_rooms,
             })
@@ -958,7 +958,7 @@ def detect_changes(
                 "increase": 0,
                 "current_total": now_count,
                 "reason": "rotation",
-                "detail_url": url_by_name.get(name, JH_WARMUP_URL),
+                "detail_url": url_by_name.get(name, TARGET_URL),
                 "cur_rooms": cur_rooms,
                 "prv_rooms": prv_rooms,
             })
@@ -1099,7 +1099,7 @@ def send_test_message() -> None:
         "increase": 1,
         "current_total": total,
         "reason": "increase",
-        "detail_url": JH_WARMUP_URL,
+        "detail_url": TARGET_URL,
         "cur_rooms": rooms,
         "prv_rooms": {k: max(0, v - 1) for k, v in rooms.items()},
     }
