@@ -63,11 +63,12 @@ def ensure_data_dir() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def get_with_session() -> str | None:
+def get_with_session() -> tuple[str, requests.Session, str] | tuple[None, None, None]:
     """
     人間偽装:
     1) to-kousyaトップへアクセスしてCookie取得
     2) そのSessionで対象ページを取得
+    戻り値: (html, session, final_url) または (None, None, None)
     """
     session = requests.Session()
     session.headers.update(HEADERS)
@@ -77,7 +78,7 @@ def get_with_session() -> str | None:
         warmup.raise_for_status()
     except requests.RequestException as exc:
         print(f"[WARN] 事前アクセス失敗: {exc}")
-        return None
+        return None, None, None
 
     # 公社の賃貸案内 → jhomes 側の入口（404 にならない URL）
     try:
@@ -105,10 +106,12 @@ def get_with_session() -> str | None:
         html1 = decode_html_response(res)
         # akiyaJyokenDirect のような「数秒後に次の画面」中間ページ対策
         html2 = maybe_follow_transition(session, res.url, html1)
-        return html2 or html1
+        final_html = html2 or html1
+        final_url = res.url
+        return final_html, session, final_url
     except requests.RequestException as exc:
         print(f"[WARN] ターゲット取得失敗: {exc}")
-        return None
+        return None, None, None
 
 
 def _html_has_list_markers(text: str) -> bool:
@@ -648,6 +651,68 @@ def save_debug_html(html: str) -> Path:
     return path
 
 
+def extract_next_page_url(html: str, base_url: str) -> str | None:
+    """
+    ページネーションの「次の○件」「次ページ」リンクを探して URL を返す。
+    見つからない場合は None。
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    next_keywords = ("次の", "次ページ", "次へ", "&#27425;", "&gt;&gt;", ">>", "＞＞")
+    for a in soup.find_all("a", href=True):
+        href = (a.get("href") or "").strip()
+        if not href or href == "#":
+            continue
+        text = html_module.unescape(a.get_text(" ", strip=True))
+        if any(k in text for k in next_keywords):
+            return urljoin(base_url, href)
+    return None
+
+
+def collect_all_rows(
+    session: requests.Session,
+    first_html: str,
+    first_url: str,
+    max_pages: int = 20,
+) -> list[dict[str, Any]]:
+    """
+    1ページ目の HTML からページネーションを辿り、全ページの行を結合して返す。
+    """
+    all_rows: list[dict[str, Any]] = []
+    html = first_html
+    url = first_url
+    visited: set[str] = set()
+
+    for page_num in range(1, max_pages + 1):
+        norm_url = url.rstrip("/")
+        if norm_url in visited:
+            break
+        visited.add(norm_url)
+
+        rows = parse_properties(html)
+        print(f"[INFO] ページ {page_num}: {len(rows)} 件取得 ({url})")
+        all_rows.extend(rows)
+
+        next_url = extract_next_page_url(html, url)
+        if not next_url or next_url.rstrip("/") in visited:
+            break
+
+        try:
+            res = session.get(
+                next_url,
+                timeout=30,
+                headers={**HEADERS, "Referer": url},
+            )
+            res.raise_for_status()
+            html = decode_html_response(res)
+            url = res.url
+        except requests.RequestException as exc:
+            print(f"[WARN] ページ {page_num + 1} 取得失敗（ここまでの結果を使用）: {exc}")
+            break
+
+    print(f"[INFO] 全ページ合計: {len(all_rows)} 行")
+    return all_rows
+
+
 def build_property_map(rows: list[dict[str, Any]]) -> dict[str, int]:
     """
     要件に合わせて「物件名: 件数」の辞書を作る。
@@ -803,7 +868,7 @@ def main() -> None:
     ensure_data_dir()
     print(f"[INFO] 監視URL: {TARGET_URL}")
 
-    html = get_with_session()
+    html, session, final_url = get_with_session()
     if not html:
         print("[INFO] データ取得失敗のため終了します。")
         return
@@ -812,7 +877,7 @@ def main() -> None:
         print("[INFO] メンテナンス中（おわび画面）を検知したため終了します。")
         return
 
-    rows = parse_properties(html)
+    rows = collect_all_rows(session, html, final_url)
     if not rows:
         # 構造変化・文字化け・空一覧・一時不調時も停止せずログ終了
         print("[INFO] 一覧から物件行を1件も取得できませんでした。通知せず終了します。")
