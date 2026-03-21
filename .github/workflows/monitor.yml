@@ -7,6 +7,11 @@ on:
     - cron: "*/10 * * * *"
   # 手動実行も可能にしておく
   workflow_dispatch:
+    inputs:
+      test:
+        description: "テスト送信（LINEにサンプル通知を送る）"
+        type: boolean
+        default: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -47,7 +52,12 @@ jobs:
           JKK_DATA_DIR: ${{ github.workspace }}
           # 必要に応じて詳細 URL を上書き
           JKK_DETAIL_VIEW_BASE: ${{ secrets.JKK_DETAIL_VIEW_BASE }}
-        run: python jkk_line_notify.py
+        run: |
+          if [ "${{ github.event.inputs.test }}" = "true" ]; then
+            python jkk_line_notify.py --test
+          else
+            python jkk_line_notify.py
+          fi
 
       - name: 状態ファイルが更新されていれば自動コミット & プッシュ
         run: |

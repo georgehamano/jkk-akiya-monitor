@@ -1082,5 +1082,39 @@ def main() -> None:
         print(f"[INFO] {len(changes)}件の更新を検知（通知は未送信/失敗）。")
 
 
+def send_test_message() -> None:
+    """--test フラグ用: 現在の last_data.json の先頭1件を使ってテスト通知を送る。"""
+    ensure_data_dir()
+    saved = load_json(LAST_DATA_FILE, {})
+    saved_detail = load_json(LAST_DETAIL_FILE, {})
+
+    if saved:
+        name, total = next(iter(saved.items()))
+        rooms = saved_detail.get(name, {})
+    else:
+        name, total, rooms = "テスト物件（サンプル）", 3, {"1K": 2, "2DK": 1}
+
+    test_change = {
+        "name": name,
+        "increase": 1,
+        "current_total": total,
+        "reason": "increase",
+        "detail_url": TARGET_URL,
+        "cur_rooms": rooms,
+        "prv_rooms": {k: max(0, v - 1) for k, v in rooms.items()},
+    }
+    messages = build_line_messages([test_change])
+    print(f"[INFO] テストメッセージ送信:\n{messages[0]['text']}\n")
+    sent = send_line_push(messages)
+    if sent:
+        print("[INFO] テスト送信成功。LINEを確認してください。")
+    else:
+        print("[WARN] テスト送信失敗（LINE設定を確認してください）。")
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    if "--test" in sys.argv:
+        send_test_message()
+    else:
+        main()
