@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 HOME_URL = "https://www.to-kousya.or.jp/"
 # 賃貸ポータル（Referer 用・ウォームアップ用）
-CHINTAI_URL = "https://www.to-kousya.or.jp/chintai/index.html"
+CHINTAI_URL = "https://www.to-kousya.or.jp/chintai/reco/index.html"
 # jhomes のルート https://jhomes.to-kousya.or.jp/ は 404 のため使わない
 JH_WARMUP_URL = "https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenStartInit"
 # 一覧取得先（空き家条件の検索結果は akiyaJyokenDirect。変更数だけ見る場合は AKIYAchangeCount 等）
