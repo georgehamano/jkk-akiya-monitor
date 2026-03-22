@@ -968,43 +968,61 @@ def detect_changes(
     return notices
 
 
+def _build_change_block(c: dict[str, Any]) -> str:
+    """1件分の変化テキストブロックを生成する。"""
+    reason_label = {"new": "新規掲載", "increase": "増加", "rotation": "内訳変更"}.get(
+        c["reason"], c["reason"]
+    )
+    cur: dict[str, int] = c.get("cur_rooms", {})
+    prv: dict[str, int] = c.get("prv_rooms", {})
+    all_rooms = sorted(set(cur) | set(prv))
+    room_lines: list[str] = []
+    for room in all_rooms:
+        now_cnt = cur.get(room, 0)
+        prv_cnt = prv.get(room, 0)
+        if prv_cnt == 0 and now_cnt > 0:
+            room_lines.append(f"  {room}: {now_cnt}戸 ★新規")
+        elif now_cnt > prv_cnt:
+            room_lines.append(f"  {room}: {now_cnt}戸（前回: {prv_cnt}戸 +{now_cnt - prv_cnt}）")
+        elif now_cnt < prv_cnt:
+            room_lines.append(f"  {room}: {now_cnt}戸（前回: {prv_cnt}戸 -{prv_cnt - now_cnt}）")
+        elif now_cnt > 0:
+            room_lines.append(f"  {room}: {now_cnt}戸")
+
+    room_block = "\n".join(room_lines) if room_lines else "  （内訳情報なし）"
+    increase_str = f"+{c['increase']}" if c["increase"] > 0 else "±0"
+    return (
+        f"▶ {c['name']}（{reason_label}）\n"
+        f"{room_block}\n"
+        f"  合計: {c['current_total']}戸（{increase_str}）"
+    )
+
+
 def build_line_messages(changes: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """変化リストを1通にまとめたLINEメッセージを返す（5000字超なら分割）。"""
+    url = changes[0]["detail_url"] if changes else CHINTAI_URL
+    header = f"【JKK 空き家状況更新】{len(changes)}件\n"
+    footer = f"\n詳細はこちら: {url}"
+
+    blocks = [_build_change_block(c) for c in changes]
+    separator = "\n─────────────\n"
+
+    # 5000字以内に収まるよう必要なら分割
     messages: list[dict[str, str]] = []
-    for c in changes:
-        reason_label = {"new": "新規掲載", "increase": "増加", "rotation": "内訳変更"}.get(
-            c["reason"], c["reason"]
-        )
+    current_blocks: list[str] = []
+    for block in blocks:
+        candidate = header + separator.join(current_blocks + [block]) + footer
+        if current_blocks and len(candidate) > 5000:
+            text = header + separator.join(current_blocks) + footer
+            messages.append({"type": "text", "text": text})
+            current_blocks = [block]
+        else:
+            current_blocks.append(block)
 
-        # 間取り別内訳行を生成
-        cur: dict[str, int] = c.get("cur_rooms", {})
-        prv: dict[str, int] = c.get("prv_rooms", {})
-        all_rooms = sorted(set(cur) | set(prv))
-        room_lines: list[str] = []
-        for room in all_rooms:
-            now_cnt = cur.get(room, 0)
-            prv_cnt = prv.get(room, 0)
-            if prv_cnt == 0 and now_cnt > 0:
-                room_lines.append(f"  {room}: {now_cnt}戸 ★新規")
-            elif now_cnt > prv_cnt:
-                room_lines.append(f"  {room}: {now_cnt}戸（前回: {prv_cnt}戸 +{now_cnt - prv_cnt}）")
-            elif now_cnt < prv_cnt:
-                room_lines.append(f"  {room}: {now_cnt}戸（前回: {prv_cnt}戸 -{prv_cnt - now_cnt}）")
-            elif now_cnt > 0:
-                room_lines.append(f"  {room}: {now_cnt}戸")
+    if current_blocks:
+        text = header + separator.join(current_blocks) + footer
+        messages.append({"type": "text", "text": text})
 
-        room_block = "\n".join(room_lines) if room_lines else "  （内訳情報なし）"
-
-        increase_str = f"+{c['increase']}" if c["increase"] > 0 else "±0"
-        text = (
-            f"【JKK 空き家状況更新】（{reason_label}）\n"
-            f"物件名: {c['name']}\n"
-            f"─────────────\n"
-            f"{room_block}\n"
-            f"─────────────\n"
-            f"合計: {c['current_total']}戸（{increase_str}）\n"
-            f"詳細URL: {c['detail_url']}"
-        )
-        messages.append({"type": "text", "text": text[:5000]})
     return messages
 
 
