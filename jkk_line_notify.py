@@ -143,7 +143,9 @@ def decode_html_response(res: requests.Response) -> str:
     raw = res.content or b""
     seen: list[str] = []
     best_guess: str | None = None
-    for enc in (res.apparent_encoding, "cp932", "shift_jis", "euc_jp", "utf-8"):
+    # CP932/Shift_JIS を先に試す（JKK は Shift_JIS が多く、apparent_encoding が
+    # ISO-8859-1 等を誤検出すると HTML 実体参照経由でマーカーが偽ヒットするため）
+    for enc in ("cp932", "shift_jis", res.apparent_encoding, "euc_jp", "utf-8"):
         if not enc or enc in seen:
             continue
         seen.append(enc)
