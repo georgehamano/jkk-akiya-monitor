@@ -31,7 +31,7 @@ _DEFAULT_TARGET_URL = (
     "https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyokenDirect"
 )
 TARGET_URL = os.getenv("JKK_TARGET_URL", _DEFAULT_TARGET_URL).strip()
-LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
+LINE_BROADCAST_URL = "https://api.line.me/v2/bot/message/broadcast"
 
 # 詳細ページ URL（senPage の例: ('','L8851','1280950','0000') → p2=行コード, p3=団地コード, p4=サブ）
 # 既定は「…/view?danchi=&room=」形式（実サイトのパスが違う場合は JKK_DETAIL_VIEW_BASE 等で上書き）
@@ -1028,9 +1028,8 @@ def build_line_messages(changes: list[dict[str, Any]]) -> list[dict[str, str]]:
 
 def send_line_push(messages: list[dict[str, str]]) -> bool:
     token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
-    to = os.getenv("LINE_TO", "").strip()  # userId/groupId/roomId
-    if not token or not to:
-        print("[INFO] LINE設定が未指定のため通知をスキップします。")
+    if not token:
+        print("[INFO] LINE_CHANNEL_ACCESS_TOKEN が未指定のため通知をスキップします。")
         return False
 
     headers = {
@@ -1038,12 +1037,12 @@ def send_line_push(messages: list[dict[str, str]]) -> bool:
         "Content-Type": "application/json",
     }
 
-    # LINE Messaging APIのpushは1回あたり最大5メッセージ
+    # broadcast は1回あたり最大5メッセージ
     for i in range(0, len(messages), 5):
         chunk = messages[i : i + 5]
-        payload = {"to": to, "messages": chunk}
+        payload = {"messages": chunk}
         try:
-            r = requests.post(LINE_PUSH_URL, headers=headers, json=payload, timeout=30)
+            r = requests.post(LINE_BROADCAST_URL, headers=headers, json=payload, timeout=30)
             r.raise_for_status()
         except requests.RequestException as exc:
             print(f"[WARN] LINE通知失敗: {exc}")
