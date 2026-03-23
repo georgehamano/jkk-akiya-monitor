@@ -80,3 +80,61 @@ jobs:
             git commit -m "chore: 状態ファイルを更新 [skip ci]"
             git push
           fi
+
+      - name: vacancies.json を公開リポジトリへ書き出し
+        env:
+          JKK_DATA_PAT: ${{ secrets.JKK_DATA_PAT }}
+        run: |
+          # last_data.json と last_rooms_detail.json を vacancies.json に変換して push
+          python - <<'PYEOF'
+          import json, datetime, os, subprocess, pathlib
+
+          data_file = pathlib.Path("last_data.json")
+          detail_file = pathlib.Path("last_rooms_detail.json")
+
+          if not data_file.exists():
+              print("last_data.json が見つかりません。スキップします。")
+              exit(0)
+
+          data = json.loads(data_file.read_text(encoding="utf-8"))
+          detail = json.loads(detail_file.read_text(encoding="utf-8")) if detail_file.exists() else {}
+
+          properties = [
+              {"name": name, "total": total, "rooms": detail.get(name, {})}
+              for name, total in data.items()
+          ]
+
+          jst = datetime.timezone(datetime.timedelta(hours=9))
+          vacancies = {
+              "updated_at": datetime.datetime.now(jst).isoformat(timespec="seconds"),
+              "properties": properties,
+          }
+
+          pathlib.Path("vacancies.json").write_text(
+              json.dumps(vacancies, ensure_ascii=False, indent=2), encoding="utf-8"
+          )
+          print("vacancies.json を生成しました。")
+          PYEOF
+
+          # PAT が未設定なら skip
+          if [ -z "$JKK_DATA_PAT" ]; then
+            echo "JKK_DATA_PAT が未設定のため公開リポジトリへの書き出しをスキップします。"
+            exit 0
+          fi
+
+          # jkk-akiya-data リポジトリへ push
+          REPO="https://github-actions[bot]:${JKK_DATA_PAT}@github.com/georgehamano/jkk-akiya-data.git"
+          WORKDIR=$(mktemp -d)
+          git clone --depth 1 "$REPO" "$WORKDIR"
+          cp vacancies.json "$WORKDIR/vacancies.json"
+          cd "$WORKDIR"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add vacancies.json
+          if git diff --cached --quiet; then
+            echo "vacancies.json に変更なし。スキップします。"
+          else
+            git commit -m "chore: vacancies.json を更新"
+            git push
+            echo "vacancies.json を公開リポジトリへ push しました。"
+          fi
