@@ -1000,7 +1000,7 @@ def _build_change_block(c: dict[str, Any]) -> str:
 
 def build_line_messages(changes: list[dict[str, Any]]) -> list[dict[str, str]]:
     """変化リストを1通にまとめたLINEメッセージを返す（5000字超なら分割）。"""
-    url = changes[0]["detail_url"] if changes else CHINTAI_URL
+    url = CHINTAI_URL
     header = f"【JKK 空き家状況更新】{len(changes)}件\n"
     footer = f"\n詳細はこちら: {url}"
 
