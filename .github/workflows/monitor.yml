@@ -77,8 +77,8 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # last_data.json / last_rooms.json に変更があるか確認
-          git add last_data.json last_rooms.json last_rooms_detail.json 2>/dev/null || true
+          # last_data.json / last_rooms.json / last_images.json に変更があるか確認
+          git add last_data.json last_rooms.json last_rooms_detail.json last_images.json 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "状態ファイルに変更なし。コミットをスキップします。"
@@ -97,6 +97,7 @@ jobs:
 
           data_file = pathlib.Path("last_data.json")
           detail_file = pathlib.Path("last_rooms_detail.json")
+          images_file = pathlib.Path("last_images.json")
 
           if not data_file.exists():
               print("last_data.json が見つかりません。スキップします。")
@@ -104,11 +105,14 @@ jobs:
 
           data = json.loads(data_file.read_text(encoding="utf-8"))
           detail = json.loads(detail_file.read_text(encoding="utf-8")) if detail_file.exists() else {}
+          images = json.loads(images_file.read_text(encoding="utf-8")) if images_file.exists() else {}
 
-          properties = [
-              {"name": name, "total": total, "rooms": detail.get(name, {})}
-              for name, total in data.items()
-          ]
+          properties = []
+          for name, total in data.items():
+              prop = {"name": name, "total": total, "rooms": detail.get(name, {})}
+              if name in images:
+                  prop["image_url"] = images[name]
+              properties.append(prop)
 
           jst = datetime.timezone(datetime.timedelta(hours=9))
           vacancies = {

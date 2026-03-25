@@ -45,6 +45,7 @@ DATA_DIR = Path(os.getenv("JKK_DATA_DIR", str(_SCRIPT_DIR))).resolve()
 LAST_DATA_FILE = DATA_DIR / "last_data.json"        # 物件名 -> 合算件数
 LAST_ROOMS_FILE = DATA_DIR / "last_rooms.json"      # 入れ替わり検知用ハッシュ
 LAST_DETAIL_FILE = DATA_DIR / "last_rooms_detail.json"  # 間取り別件数
+LAST_IMAGES_FILE = DATA_DIR / "last_images.json"    # 物件名 -> 外観画像URL
 
 HEADERS = {
     "User-Agent": (
@@ -628,6 +629,15 @@ def parse_properties(html: str) -> list[dict[str, Any]]:
             a = tr.find("a", onclick=True)
             sen_args = extract_senpage_args((a.get("onclick") or "")) if a else None
 
+            # 外観画像URL（cells[0] の img src から取得）
+            image_url: str | None = None
+            if cells:
+                img = cells[0].find("img")
+                if img and img.get("src"):
+                    src = str(img["src"])
+                    if "mz_copyright" in src:
+                        image_url = src if src.startswith("http") else f"https://jhomes.to-kousya.or.jp{src}"
+
             rows.append(
                 {
                     "name": name,
@@ -635,6 +645,7 @@ def parse_properties(html: str) -> list[dict[str, Any]]:
                     "count": count,
                     "detail_url": detail_url,
                     "senpage": ",".join(sen_args) if sen_args else "",
+                    "image_url": image_url,
                 }
             )
 
@@ -671,6 +682,14 @@ def parse_properties_cell666666_fixed(soup: BeautifulSoup) -> list[dict[str, Any
             a = tr.find("a", onclick=True)
             sen_args = extract_senpage_args((a.get("onclick") or "")) if a else None
 
+            # 外観画像URL（cells[0] の img src から取得）
+            image_url: str | None = None
+            img = cells[0].find("img")
+            if img and img.get("src"):
+                src = str(img["src"])
+                if "mz_copyright" in src:
+                    image_url = src if src.startswith("http") else f"https://jhomes.to-kousya.or.jp{src}"
+
             out.append(
                 {
                     "name": name,
@@ -678,6 +697,7 @@ def parse_properties_cell666666_fixed(soup: BeautifulSoup) -> list[dict[str, Any
                     "count": count,
                     "detail_url": detail_url,
                     "senpage": ",".join(sen_args) if sen_args else "",
+                    "image_url": image_url,
                 }
             )
     return out
@@ -943,6 +963,20 @@ def build_room_detail_map(rows: list[dict[str, Any]]) -> dict[str, dict[str, int
     return result
 
 
+def build_image_map(rows: list[dict[str, Any]], prev: dict[str, str]) -> dict[str, str]:
+    """
+    物件名 -> 外観画像URL のマップを構築する。
+    今回取得できなかった画像は前回値を引き継ぐ（一度取得できれば保持）。
+    """
+    result: dict[str, str] = dict(prev)  # 前回値を継承
+    for r in rows:
+        name = str(r["name"])
+        url = r.get("image_url")
+        if url:
+            result[name] = url
+    return result
+
+
 def load_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
@@ -1133,6 +1167,9 @@ def main() -> None:
     prev_map = load_json(LAST_DATA_FILE, {})
     prev_fp = load_json(LAST_ROOMS_FILE, {})
     prev_detail = load_json(LAST_DETAIL_FILE, {})
+    prev_images = load_json(LAST_IMAGES_FILE, {})
+
+    current_images = build_image_map(rows, prev_images)
 
     changes = detect_changes(
         current_map, prev_map, current_fp, prev_fp, current_detail, prev_detail, rows
@@ -1142,6 +1179,7 @@ def main() -> None:
     save_json(LAST_DATA_FILE, current_map)
     save_json(LAST_ROOMS_FILE, current_fp)
     save_json(LAST_DETAIL_FILE, current_detail)
+    save_json(LAST_IMAGES_FILE, current_images)
 
     if not changes:
         print("[INFO] 在庫増・新規・内訳入れ替わりはありません。")
