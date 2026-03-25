@@ -47,9 +47,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          # Playwright（将来の JavaScript レンダリング対応用）
-          pip install playwright
-          playwright install chromium --with-deps
 
       - name: JKK 監視スクリプトを実行
         env:
@@ -65,7 +62,14 @@ jobs:
           elif [ "${{ github.event.inputs.daily }}" = "true" ] || [ "${{ github.event.schedule }}" = "30 22 * * *" ]; then
             python jkk_line_notify.py --daily
           else
-            python jkk_line_notify.py
+            # 40秒おきに4回ループ → 実質 ~1分間隔で監視（ジョブ全体4分以内）
+            for i in 1 2 3 4; do
+              echo "=== 監視ループ ${i}/4 ==="
+              python jkk_line_notify.py
+              if [ $i -lt 4 ]; then
+                sleep 40
+              fi
+            done
           fi
 
       - name: 状態ファイルが更新されていれば自動コミット & プッシュ
