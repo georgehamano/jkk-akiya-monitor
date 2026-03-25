@@ -64,11 +64,47 @@ def ensure_data_dir() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _collect_akiSearch_form_data(html: str) -> list[tuple[str, str]]:
+    """
+    akiyaJyoukenStartInit の条件フォーム（name='akiSearch'）から
+    全エリア・全カテゴリを対象とするフォームデータをタプルリストで返す。
+    取得できなかった場合は空リストを返す。
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form", {"name": "akiSearch"})
+    if not form:
+        print("[WARN] 条件フォーム (akiSearch) が見つかりません。直接GETにフォールバックします。")
+        return []
+
+    data: list[tuple[str, str]] = []
+    for tag in form.find_all(["input", "select"]):
+        name = (tag.get("name") or "").strip()
+        if not name:
+            continue
+        typ = tag.get("type", tag.name)
+        if typ == "checkbox":
+            # 全エリアのチェックボックスをすべて送信（選択状態に関わらず）
+            data.append((name, tag.get("value") or ""))
+        elif typ == "radio":
+            # チェック済みのラジオのみ
+            if tag.get("checked") is not None:
+                data.append((name, tag.get("value") or ""))
+        elif tag.name == "select":
+            # yusenBoshu を空文字（全カテゴリ）にする。他の select もデフォルトで空文字。
+            data.append((name, ""))
+        else:
+            data.append((name, tag.get("value") or ""))
+
+    print(f"[INFO] 条件フォーム収集完了: {len(data)} フィールド（全カテゴリ対象）")
+    return data
+
+
 def get_with_session() -> tuple[str, requests.Session, str] | tuple[None, None, None]:
     """
     人間偽装:
     1) to-kousyaトップへアクセスしてCookie取得
-    2) そのSessionで対象ページを取得
+    2) akiyaJyoukenStartInit の条件フォームを取得（全カテゴリを対象）
+    3) 条件フォームを POST して全カテゴリの結果を取得
     戻り値: (html, session, final_url) または (None, None, None)
     """
     session = requests.Session()
@@ -87,19 +123,37 @@ def get_with_session() -> tuple[str, requests.Session, str] | tuple[None, None, 
     except requests.RequestException as exc:
         print(f"[WARN] 賃貸案内ページ取得失敗（続行）: {exc}")
 
-    warmup_jh = os.getenv("JKK_JHOMES_WARMUP_URL", JH_WARMUP_URL).strip()
-    if warmup_jh:
-        try:
-            session.get(warmup_jh, timeout=30).raise_for_status()
-        except requests.RequestException as exc:
-            print(f"[WARN] jhomes ウォームアップ取得失敗（続行）: {exc}")
-
+    # 条件フォームを取得（全カテゴリ対象にするため POST で条件ページを開く）
+    form_data: list[tuple[str, str]] = []
     try:
-        res = session.get(
-            TARGET_URL,
+        res_init = session.post(
+            JH_WARMUP_URL,
+            data={"redirect": "true", "url": JH_WARMUP_URL},
             timeout=30,
             headers={**HEADERS, "Referer": CHINTAI_URL},
         )
+        res_init.raise_for_status()
+        html_init = decode_html_response(res_init)
+        form_data = _collect_akiSearch_form_data(html_init)
+    except requests.RequestException as exc:
+        print(f"[WARN] 条件フォーム取得失敗（直接GETにフォールバック）: {exc}")
+
+    try:
+        if form_data:
+            # 条件フォームを POST → 全カテゴリ（子育・応援・高齢・一般）を取得
+            res = session.post(
+                TARGET_URL,
+                data=form_data,
+                timeout=30,
+                headers={**HEADERS, "Referer": JH_WARMUP_URL},
+            )
+        else:
+            # フォールバック: 直接 GET（一般のみになる可能性あり）
+            res = session.get(
+                TARGET_URL,
+                timeout=30,
+                headers={**HEADERS, "Referer": CHINTAI_URL},
+            )
         res.raise_for_status()
         raw_len = len(res.content or b"")
         ct = (res.headers.get("Content-Type") or "").split(";")[0].strip()
