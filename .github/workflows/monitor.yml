@@ -88,7 +88,7 @@ jobs:
             echo "状態ファイルに変更なし。コミットをスキップします。"
           else
             git commit -m "chore: 状態ファイルを更新 [skip ci]"
-            git push
+            git pull --rebase && git push
           fi
 
       - name: vacancies.json を公開リポジトリへ書き出し
