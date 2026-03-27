@@ -2,14 +2,12 @@ name: JKK 空き家監視
 
 on:
   schedule:
-    # 5分おきに実行（UTC基準 / 日本時間 = UTC+9）
-    # GitHub Actions のスケジューラは高負荷時に数分遅延する場合があります
-    # GitHub Actions の最短実行間隔は5分
-    - cron: "*/5 * * * *"
+    # cron-job.org が止まった時の保険（30分おき）
+    # 通常は cron-job.org の workflow_dispatch キックが主トリガー
+    - cron: "*/30 * * * *"
     # 毎朝8時台（JST）に日次レポートを送信
-    # GitHub Actionsの遅延（最大60分）を考慮し UTC 22:30（JST 7:30）に設定
     - cron: "30 22 * * *"
-  # 手動実行も可能にしておく
+  # cron-job.org（および手動）からのキック用
   workflow_dispatch:
     inputs:
       test:
@@ -23,6 +21,12 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+# 同時実行を1つに制限（重複通知を防ぐ）
+# cancel-in-progress: false = 実行中ジョブを止めず、後続をキューで待機
+concurrency:
+  group: monitor
+  cancel-in-progress: false
 
 jobs:
   monitor:
