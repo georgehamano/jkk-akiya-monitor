@@ -82,7 +82,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # 状態ファイルに変更があるか確認
-          git add last_data.json last_rooms.json last_rooms_detail.json last_images.json last_location.json 2>/dev/null || true
+          git add last_data.json last_rooms.json last_rooms_detail.json last_images.json last_location.json last_rates.json 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "状態ファイルに変更なし。コミットをスキップします。"
@@ -112,6 +112,8 @@ jobs:
           images = json.loads(images_file.read_text(encoding="utf-8")) if images_file.exists() else {}
           location_file = pathlib.Path("last_location.json")
           locations = json.loads(location_file.read_text(encoding="utf-8")) if location_file.exists() else {}
+          rates_file = pathlib.Path("last_rates.json")
+          rates = json.loads(rates_file.read_text(encoding="utf-8")) if rates_file.exists() else {}
 
           properties = []
           for name, total in data.items():
@@ -120,6 +122,8 @@ jobs:
                   prop["image_url"] = images[name]
               if name in locations:
                   prop["location"] = locations[name]
+              if name in rates:
+                  prop["room_details"] = rates[name]
               properties.append(prop)
 
           jst = datetime.timezone(datetime.timedelta(hours=9))

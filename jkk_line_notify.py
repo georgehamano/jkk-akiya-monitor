@@ -46,6 +46,8 @@ LAST_DATA_FILE = DATA_DIR / "last_data.json"        # 物件名 -> 合算件数
 LAST_ROOMS_FILE = DATA_DIR / "last_rooms.json"      # 入れ替わり検知用ハッシュ
 LAST_DETAIL_FILE = DATA_DIR / "last_rooms_detail.json"  # 間取り別件数
 LAST_IMAGES_FILE = DATA_DIR / "last_images.json"    # 物件名 -> 外観画像URL
+LAST_LOCATION_FILE = DATA_DIR / "last_location.json"    # 物件名 -> 地域
+LAST_RATES_FILE = DATA_DIR / "last_rates.json"      # 物件名 -> 間取り -> {area, rent, fee}
 
 HEADERS = {
     "User-Agent": (
@@ -473,13 +475,13 @@ def parse_count(text: str) -> int | None:
 
 def pick_col_idx(
     headers: list[str],
-) -> tuple[int | None, int | None, int | None]:
+) -> tuple[int | None, int | None, int | None, int | None, int | None, int | None, int | None]:
     """
-    戻り値: (物件名/住宅名列, 号室または間取り列, 件数列)
-    - AKIYAchangeCount 一覧は「住宅名」「間取り」「募集戸数」形式
+    戻り値: (物件名/住宅名列, 号室または間取り列, 件数列, 地域列, 床面積列, 家賃列, 共益費列)
+    - AKIYAchangeCount 一覧は「住宅名」「地域」「間取り」「床面積」「家賃」「共益費」「募集戸数」形式
     - 旧形式は「物件名」「号室」「空き家数」等も許容
     """
-    idx_name = idx_sub = idx_count = None
+    idx_name = idx_sub = idx_count = idx_loc = idx_area = idx_rent = idx_fee = None
     for i, h in enumerate(headers):
         if "物件名" in h or "住宅名" in h:
             idx_name = i
@@ -491,12 +493,20 @@ def pick_col_idx(
             idx_count = i
         if ("空き家" in h or "空室" in h) and ("現在" in h or "件数" in h):
             idx_count = i
+        if "地域" in h and idx_loc is None:
+            idx_loc = i
+        if "床面積" in h and idx_area is None:
+            idx_area = i
+        if "家賃" in h and idx_rent is None:
+            idx_rent = i
+        if "共益費" in h and idx_fee is None:
+            idx_fee = i
     if idx_count is None:
         for i, h in enumerate(headers):
             if "空き家" in h or "空室" in h:
                 idx_count = i
                 break
-    return idx_name, idx_sub, idx_count
+    return idx_name, idx_sub, idx_count, idx_loc, idx_area, idx_rent, idx_fee
 
 
 def extract_senpage_args(onclick: str) -> tuple[str, str, str, str] | None:
@@ -569,18 +579,18 @@ def build_detail_url_from_row(tr) -> str:
 
 def _header_row_and_indices(
     tr_list: list,
-) -> tuple[int, int, int, int] | None:
+) -> tuple[int, int, int, int, int | None, int | None, int | None, int | None] | None:
     """
     先頭数行のどれかがヘッダ行（住宅名+募集戸数 等）のケースに対応。
-    戻り値: (header_row_index, idx_name, idx_sub, idx_count) または None
+    戻り値: (header_row_index, idx_name, idx_sub, idx_count, idx_loc, idx_area, idx_rent, idx_fee) または None
     """
     max_scan = min(6, len(tr_list))
     for hi in range(max_scan):
         header_cells = tr_list[hi].find_all(["th", "td"])
         headers = [html_module.unescape(c.get_text(strip=True)) for c in header_cells]
-        idx_name, idx_sub, idx_count = pick_col_idx(headers)
+        idx_name, idx_sub, idx_count, idx_loc, idx_area, idx_rent, idx_fee = pick_col_idx(headers)
         if idx_name is not None and idx_count is not None:
-            return (hi, idx_name, idx_sub, idx_count)
+            return (hi, idx_name, idx_sub, idx_count, idx_loc, idx_area, idx_rent, idx_fee)
     return None
 
 
@@ -608,7 +618,7 @@ def parse_properties(html: str) -> list[dict[str, Any]]:
         parsed = _header_row_and_indices(tr_list)
         if not parsed:
             continue
-        hi, idx_name, idx_sub, idx_count = parsed
+        hi, idx_name, idx_sub, idx_count, idx_loc, idx_area, idx_rent, idx_fee = parsed
 
         for tr in tr_list[hi + 1 :]:
             cells = tr.find_all(["td", "th"])
@@ -624,6 +634,30 @@ def parse_properties(html: str) -> list[dict[str, Any]]:
             count = parse_count(cells[idx_count].get_text(" ", strip=True))
             if not name or count is None:
                 continue
+
+            location: str | None = None
+            if idx_loc is not None and idx_loc < len(cells):
+                loc = html_module.unescape(cells[idx_loc].get_text(" ", strip=True))
+                if loc:
+                    location = loc
+
+            area: str | None = None
+            if idx_area is not None and idx_area < len(cells):
+                a_txt = cells[idx_area].get_text(" ", strip=True).replace(",", "")
+                if a_txt:
+                    area = a_txt
+
+            rent: str | None = None
+            if idx_rent is not None and idx_rent < len(cells):
+                r_txt = cells[idx_rent].get_text(" ", strip=True).replace(",", "")
+                if r_txt:
+                    rent = r_txt
+
+            fee: str | None = None
+            if idx_fee is not None and idx_fee < len(cells):
+                f_txt = cells[idx_fee].get_text(" ", strip=True).replace(",", "")
+                if f_txt:
+                    fee = f_txt
 
             detail_url = build_detail_url_from_row(tr)
             a = tr.find("a", onclick=True)
@@ -646,6 +680,10 @@ def parse_properties(html: str) -> list[dict[str, Any]]:
                     "detail_url": detail_url,
                     "senpage": ",".join(sen_args) if sen_args else "",
                     "image_url": image_url,
+                    "location": location,
+                    "area": area,
+                    "rent": rent,
+                    "fee": fee,
                 }
             )
 
@@ -662,7 +700,7 @@ def parse_properties(html: str) -> list[dict[str, Any]]:
 def parse_properties_cell666666_fixed(soup: BeautifulSoup) -> list[dict[str, Any]]:
     """
     ヘッダ文字列が実体参照・画像のみ等で pick_col_idx に失敗したときのフォールバック。
-    実ページの列順: 0外観 1住宅名 2地域 … 5間取り … 9募集戸数
+    実ページの列順: 0外観 1住宅名 2地域 3優先種別 4住宅種別 5間取り 6床面積 7家賃 8共益費 9募集戸数
     """
     out: list[dict[str, Any]] = []
     for table in soup.select("table.cell666666"):
@@ -677,6 +715,26 @@ def parse_properties_cell666666_fixed(soup: BeautifulSoup) -> list[dict[str, Any
                 continue
             if name == "住宅名" or "募集戸数" in name:
                 continue
+
+            location: str | None = None
+            loc_txt = html_module.unescape(cells[2].get_text(" ", strip=True))
+            if loc_txt:
+                location = loc_txt
+
+            area: str | None = None
+            area_txt = cells[6].get_text(" ", strip=True).replace(",", "")
+            if area_txt:
+                area = area_txt
+
+            rent: str | None = None
+            rent_txt = cells[7].get_text(" ", strip=True).replace(",", "")
+            if rent_txt:
+                rent = rent_txt
+
+            fee: str | None = None
+            fee_txt = cells[8].get_text(" ", strip=True).replace(",", "")
+            if fee_txt:
+                fee = fee_txt
 
             detail_url = build_detail_url_from_row(tr)
             a = tr.find("a", onclick=True)
@@ -697,6 +755,10 @@ def parse_properties_cell666666_fixed(soup: BeautifulSoup) -> list[dict[str, Any
                     "count": count,
                     "detail_url": detail_url,
                     "senpage": ",".join(sen_args) if sen_args else "",
+                    "location": location,
+                    "area": area,
+                    "rent": rent,
+                    "fee": fee,
                     "image_url": image_url,
                 }
             )
@@ -977,6 +1039,41 @@ def build_image_map(rows: list[dict[str, Any]], prev: dict[str, str]) -> dict[st
     return result
 
 
+def build_location_map(rows: list[dict[str, Any]], prev: dict[str, str]) -> dict[str, str]:
+    """
+    物件名 -> 地域 のマップを構築する。前回値を引き継ぐ。
+    """
+    result: dict[str, str] = dict(prev)
+    for r in rows:
+        name = str(r["name"])
+        loc = r.get("location")
+        if loc:
+            result[name] = loc
+    return result
+
+
+def build_rates_map(
+    rows: list[dict[str, Any]], prev: dict[str, dict[str, dict[str, str]]]
+) -> dict[str, dict[str, dict[str, str]]]:
+    """
+    物件名 -> 間取り -> {area, rent, fee} のマップを構築する。前回値を引き継ぐ。
+    """
+    result: dict[str, dict[str, dict[str, str]]] = {k: dict(v) for k, v in prev.items()}
+    for r in rows:
+        name = str(r["name"])
+        room = str(r.get("room") or "-")
+        entry: dict[str, str] = {}
+        if r.get("area"):
+            entry["area"] = str(r["area"])
+        if r.get("rent"):
+            entry["rent"] = str(r["rent"])
+        if r.get("fee"):
+            entry["fee"] = str(r["fee"])
+        if entry:
+            result.setdefault(name, {})[room] = entry
+    return result
+
+
 def load_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
@@ -1168,8 +1265,12 @@ def main() -> None:
     prev_fp = load_json(LAST_ROOMS_FILE, {})
     prev_detail = load_json(LAST_DETAIL_FILE, {})
     prev_images = load_json(LAST_IMAGES_FILE, {})
+    prev_locations = load_json(LAST_LOCATION_FILE, {})
+    prev_rates = load_json(LAST_RATES_FILE, {})
 
     current_images = build_image_map(rows, prev_images)
+    current_locations = build_location_map(rows, prev_locations)
+    current_rates = build_rates_map(rows, prev_rates)
 
     changes = detect_changes(
         current_map, prev_map, current_fp, prev_fp, current_detail, prev_detail, rows
@@ -1180,6 +1281,8 @@ def main() -> None:
     save_json(LAST_ROOMS_FILE, current_fp)
     save_json(LAST_DETAIL_FILE, current_detail)
     save_json(LAST_IMAGES_FILE, current_images)
+    save_json(LAST_LOCATION_FILE, current_locations)
+    save_json(LAST_RATES_FILE, current_rates)
 
     if not changes:
         print("[INFO] 在庫増・新規・内訳入れ替わりはありません。")
