@@ -32,6 +32,8 @@ _DEFAULT_TARGET_URL = (
 )
 TARGET_URL = os.getenv("JKK_TARGET_URL", _DEFAULT_TARGET_URL).strip()
 LINE_BROADCAST_URL = "https://api.line.me/v2/bot/message/broadcast"
+LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
+LINE_MULTICAST_URL = "https://api.line.me/v2/bot/message/multicast"
 
 # 詳細ページ URL（senPage の例: ('','L8851','1280950','0000') → p2=行コード, p3=団地コード, p4=サブ）
 # 既定は「…/view?danchi=&room=」形式（実サイトのパスが違う場合は JKK_DETAIL_VIEW_BASE 等で上書き）
@@ -48,6 +50,7 @@ LAST_DETAIL_FILE = DATA_DIR / "last_rooms_detail.json"  # 間取り別件数
 LAST_IMAGES_FILE = DATA_DIR / "last_images.json"    # 物件名 -> 外観画像URL
 LAST_LOCATION_FILE = DATA_DIR / "last_location.json"    # 物件名 -> 地域
 LAST_RATES_FILE = DATA_DIR / "last_rates.json"      # 物件名 -> 間取り -> {area, rent, fee}
+LAST_PREFS_FILE = DATA_DIR / "user_prefs.json"      # LINEユーザーID -> 地域リスト | null
 
 HEADERS = {
     "User-Agent": (
@@ -997,11 +1000,12 @@ def build_property_map(rows: list[dict[str, Any]]) -> dict[str, int]:
 def build_room_fingerprint(rows: list[dict[str, Any]]) -> dict[str, str]:
     """
     30→30 のような件数同一の入れ替わりを検知するため、
-    物件ごとに「間取り/号室 + 募集戸数 + senPage」の行単位シグネチャをハッシュする。
+    物件ごとに「間取り/号室 + 募集戸数」の行単位シグネチャをハッシュする。
+    senPage 引数はリクエストごとに変化する可能性があるため除外する。
     """
     bucket: dict[str, list[str]] = {}
     for r in rows:
-        sig = f"{r['room']}|{r['count']}|{r.get('senpage', '')}"
+        sig = f"{r['room']}|{r['count']}"
         bucket.setdefault(r["name"], []).append(sig)
 
     fingerprint: dict[str, str] = {}
@@ -1235,6 +1239,92 @@ def send_line_push(messages: list[dict[str, str]]) -> bool:
     return True
 
 
+def send_line_multicast(user_ids: list[str], messages: list[dict[str, str]]) -> bool:
+    """最大500人に一括送信（multicast）。"""
+    token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
+    if not token or not user_ids:
+        return False
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    success = True
+    for i in range(0, len(user_ids), 500):
+        chunk_ids = user_ids[i : i + 500]
+        for j in range(0, len(messages), 5):
+            chunk_msgs = messages[j : j + 5]
+            try:
+                r = requests.post(
+                    LINE_MULTICAST_URL,
+                    headers=headers,
+                    json={"to": chunk_ids, "messages": chunk_msgs},
+                    timeout=30,
+                )
+                r.raise_for_status()
+            except requests.RequestException as exc:
+                print(f"[WARN] LINEマルチキャスト失敗: {exc}")
+                success = False
+    return success
+
+
+def send_line_push_to_one(user_id: str, messages: list[dict[str, str]]) -> bool:
+    """1ユーザーにpush送信。"""
+    token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
+    if not token:
+        return False
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    for i in range(0, len(messages), 5):
+        chunk = messages[i : i + 5]
+        try:
+            r = requests.post(
+                LINE_PUSH_URL,
+                headers=headers,
+                json={"to": user_id, "messages": chunk},
+                timeout=30,
+            )
+            r.raise_for_status()
+        except requests.RequestException as exc:
+            print(f"[WARN] LINE push失敗({user_id[:8]}...): {exc}")
+            return False
+    return True
+
+
+def notify_with_prefs(
+    changes: list[dict[str, Any]],
+    location_map: dict[str, str],
+    user_prefs: dict[str, list[str] | None],
+) -> None:
+    """
+    user_prefs に基づいて通知を振り分ける。
+    - user_prefs が空 → broadcast にフォールバック（移行期間用）
+    - null のユーザー → 全変化を multicast
+    - 地域リストのユーザー → 一致する変化のみ push
+    """
+    if not user_prefs:
+        messages = build_line_messages(changes)
+        sent = send_line_push(messages)
+        if sent:
+            print(f"[INFO] {len(changes)}件をbroadcastで通知（フォールバック）")
+        else:
+            print(f"[INFO] {len(changes)}件を検知（broadcast失敗）")
+        return
+
+    all_area_users = [uid for uid, areas in user_prefs.items() if areas is None]
+    filtered_users = {uid: areas for uid, areas in user_prefs.items() if areas is not None}
+
+    if all_area_users:
+        messages = build_line_messages(changes)
+        sent = send_line_multicast(all_area_users, messages)
+        if sent:
+            print(f"[INFO] {len(changes)}件を{len(all_area_users)}人にmulticastで通知")
+
+    for uid, areas in filtered_users.items():
+        assert areas is not None
+        matching = [c for c in changes if location_map.get(c["name"]) in areas]
+        if matching:
+            messages = build_line_messages(matching)
+            sent = send_line_push_to_one(uid, messages)
+            if sent:
+                print(f"[INFO] {len(matching)}件を{uid[:8]}...にpushで通知（{', '.join(areas)}）")
+
+
 def main() -> None:
     ensure_data_dir()
     print(f"[INFO] 監視URL: {TARGET_URL}")
@@ -1288,12 +1378,8 @@ def main() -> None:
         print("[INFO] 在庫増・新規・内訳入れ替わりはありません。")
         return
 
-    messages = build_line_messages(changes)
-    sent = send_line_push(messages)
-    if sent:
-        print(f"[INFO] {len(changes)}件の更新をLINE通知しました。")
-    else:
-        print(f"[INFO] {len(changes)}件の更新を検知（通知は未送信/失敗）。")
+    user_prefs: dict[str, list[str] | None] = load_json(LAST_PREFS_FILE, {})
+    notify_with_prefs(changes, current_locations, user_prefs)
 
 
 def send_daily_report() -> None:
@@ -1324,7 +1410,12 @@ def send_daily_report() -> None:
         text = "\n".join(lines)
 
     print(f"[INFO] 日次レポート送信:\n{text}\n")
-    sent = send_line_push([{"type": "text", "text": text[:5000]}])
+    msg = [{"type": "text", "text": text[:5000]}]
+    user_prefs: dict[str, list[str] | None] = load_json(LAST_PREFS_FILE, {})
+    if user_prefs:
+        sent = send_line_multicast(list(user_prefs.keys()), msg)
+    else:
+        sent = send_line_push(msg)
     if sent:
         print("[INFO] 日次レポート送信成功。")
     else:
