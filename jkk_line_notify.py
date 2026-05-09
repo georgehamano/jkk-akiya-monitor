@@ -1382,44 +1382,76 @@ def main() -> None:
     notify_with_prefs(changes, current_locations, user_prefs)
 
 
+def _build_daily_text(
+    date_str: str,
+    saved: dict[str, int],
+    saved_detail: dict[str, dict[str, int]],
+    location_map: dict[str, str],
+    areas: list[str] | None,
+) -> str:
+    """日次レポートのテキストを生成。areas=None なら全物件、リストなら絞り込み。"""
+    if areas is not None:
+        props = {n: c for n, c in saved.items() if location_map.get(n) in areas}
+        area_label = f"（{'・'.join(areas)}）"
+    else:
+        props = saved
+        area_label = ""
+
+    if not props:
+        return f"【JKK 在庫状況】{date_str}{area_label}\n\n対象エリアの空き家情報はありません。"
+
+    lines = [f"【JKK 在庫状況】{date_str}{area_label}\n"]
+    total_units = 0
+    for name, count in props.items():
+        total_units += count
+        rooms = saved_detail.get(name, {})
+        lines.append(f"▶ {name}: {count}戸")
+        for room, cnt in sorted(rooms.items()):
+            lines.append(f"  {room}: {cnt}戸")
+    lines.append(f"\n合計: {len(props)}物件 / {total_units}戸")
+    lines.append(f"詳細はこちら: {CHINTAI_URL}")
+    return "\n".join(lines)
+
+
 def send_daily_report() -> None:
     """--daily フラグ用: 保存済みの在庫状況を日次レポートとして送信する。"""
     import datetime
     ensure_data_dir()
     saved = load_json(LAST_DATA_FILE, {})
     saved_detail = load_json(LAST_DETAIL_FILE, {})
+    location_map: dict[str, str] = load_json(LAST_LOCATION_FILE, {})
+    user_prefs: dict[str, list[str] | None] = load_json(LAST_PREFS_FILE, {})
 
     jst = datetime.timezone(datetime.timedelta(hours=9))
     today = datetime.datetime.now(jst)
     weekday = ["月", "火", "水", "木", "金", "土", "日"][today.weekday()]
     date_str = f"{today.month}月{today.day}日({weekday})"
 
-    if not saved:
-        text = f"【JKK 在庫状況】{date_str}\n\n現在、空き家情報はありません。"
-    else:
-        lines = [f"【JKK 在庫状況】{date_str}\n"]
-        total_units = 0
-        for name, count in saved.items():
-            total_units += count
-            rooms = saved_detail.get(name, {})
-            lines.append(f"▶ {name}: {count}戸")
-            for room, cnt in sorted(rooms.items()):
-                lines.append(f"  {room}: {cnt}戸")
-        lines.append(f"\n合計: {len(saved)}物件 / {total_units}戸")
-        lines.append(f"詳細はこちら: {CHINTAI_URL}")
-        text = "\n".join(lines)
+    if not user_prefs:
+        # 未登録ユーザーのみの場合 → broadcast（フォールバック）
+        text = _build_daily_text(date_str, saved, saved_detail, location_map, None)
+        print(f"[INFO] 日次レポート送信:\n{text}\n")
+        sent = send_line_push([{"type": "text", "text": text[:5000]}])
+        if sent:
+            print("[INFO] 日次レポート送信成功。")
+        else:
+            print("[WARN] 日次レポート送信失敗（LINE設定を確認してください）。")
+        return
 
-    print(f"[INFO] 日次レポート送信:\n{text}\n")
-    msg = [{"type": "text", "text": text[:5000]}]
-    user_prefs: dict[str, list[str] | None] = load_json(LAST_PREFS_FILE, {})
-    if user_prefs:
-        sent = send_line_multicast(list(user_prefs.keys()), msg)
-    else:
-        sent = send_line_push(msg)
-    if sent:
-        print("[INFO] 日次レポート送信成功。")
-    else:
-        print("[WARN] 日次レポート送信失敗（LINE設定を確認してください）。")
+    # 全エリアユーザー（null）→ multicast で全物件レポート
+    all_area_users = [uid for uid, areas in user_prefs.items() if areas is None]
+    if all_area_users:
+        text = _build_daily_text(date_str, saved, saved_detail, location_map, None)
+        print(f"[INFO] 日次レポート（全エリア）を{len(all_area_users)}人にmulticast")
+        send_line_multicast(all_area_users, [{"type": "text", "text": text[:5000]}])
+
+    # 地域フィルターユーザー → 各自の設定に絞った内容を push
+    for uid, areas in user_prefs.items():
+        if areas is None:
+            continue
+        text = _build_daily_text(date_str, saved, saved_detail, location_map, areas)
+        print(f"[INFO] 日次レポート（{'・'.join(areas)}）を{uid[:8]}...にpush")
+        send_line_push_to_one(uid, [{"type": "text", "text": text[:5000]}])
 
 
 def send_test_message() -> None:
