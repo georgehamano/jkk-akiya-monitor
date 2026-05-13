@@ -1215,6 +1215,97 @@ def build_line_messages(changes: list[dict[str, Any]]) -> list[dict[str, str]]:
     return messages
 
 
+def _x_weighted_len(text: str) -> int:
+    """X の重み付き文字数を返す（CJK・全角=2、それ以外=1）。"""
+    weight = 0
+    for ch in text:
+        cp = ord(ch)
+        if (0x1100 <= cp <= 0x115F or 0x2E80 <= cp <= 0x303F or
+                0x3040 <= cp <= 0x33FF or 0xAC00 <= cp <= 0xD7FF or
+                0xF900 <= cp <= 0xFAFF or 0xFE30 <= cp <= 0xFE6F or
+                0xFF00 <= cp <= 0xFF60 or 0xFFE0 <= cp <= 0xFFE6 or
+                0x20000 <= cp <= 0x2A6DF):
+            weight += 2
+        else:
+            weight += 1
+    return weight
+
+
+def build_x_post_text(changes: list[dict[str, Any]], locations: dict[str, str]) -> str:
+    """変化リストから X ポスト用テキストを生成する（280重み文字以内）。"""
+    header = "🏠 JKK空き家に新着情報\n\n"
+    footer = "\n詳細・LINE通知登録 → https://jkk-akiya.com"
+    # URL は t.co 短縮で常に23文字カウント
+    footer_weight = _x_weighted_len("\n詳細・LINE通知登録 → ") + 23
+    available = 280 - _x_weighted_len(header) - footer_weight
+
+    lines: list[str] = []
+    for c in changes:
+        name = c["name"]
+        loc = locations.get(name, "")
+        loc_str = f"（{loc}）" if loc else " "
+
+        if c["reason"] == "new":
+            label = "新規掲載"
+        elif c["reason"] == "increase":
+            label = f"+{c['increase']}件"
+        else:
+            label = "内訳変更"
+
+        rooms = c.get("cur_rooms", {})
+        rooms_str = "・".join(f"{r}{n}件" for r, n in rooms.items()) if rooms else ""
+        line = f"・{name}{loc_str}{label}"
+        if rooms_str:
+            line += f"（{rooms_str}）"
+        lines.append(line)
+
+    body = ""
+    for i, line in enumerate(lines):
+        candidate = body + line + "\n"
+        if _x_weighted_len(candidate) <= available:
+            body = candidate
+        else:
+            rest = len(lines) - i
+            suffix = f"ほか{rest}件\n"
+            if _x_weighted_len(body + suffix) <= available:
+                body += suffix
+            break
+
+    return header + body.rstrip() + footer
+
+
+def send_x_post(changes: list[dict[str, Any]], locations: dict[str, str]) -> bool:
+    api_key        = os.getenv("X_API_KEY", "").strip()
+    api_secret     = os.getenv("X_API_SECRET", "").strip()
+    access_token   = os.getenv("X_ACCESS_TOKEN", "").strip()
+    access_secret  = os.getenv("X_ACCESS_TOKEN_SECRET", "").strip()
+
+    if not all([api_key, api_secret, access_token, access_secret]):
+        print("[INFO] X API キーが未設定のため X への投稿をスキップします。")
+        return False
+
+    # rotation（件数同一・内訳変更）のみの場合はスキップ
+    if all(c["reason"] == "rotation" for c in changes):
+        print("[INFO] 内訳変更のみのため X への投稿をスキップします。")
+        return False
+
+    try:
+        import tweepy
+        client = tweepy.Client(
+            consumer_key=api_key,
+            consumer_secret=api_secret,
+            access_token=access_token,
+            access_token_secret=access_secret,
+        )
+        text = build_x_post_text(changes, locations)
+        client.create_tweet(text=text)
+        print(f"[INFO] X に投稿しました。")
+        return True
+    except Exception as exc:
+        print(f"[WARN] X 投稿失敗: {exc}")
+        return False
+
+
 def send_line_push(messages: list[dict[str, str]]) -> bool:
     token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
     if not token:
@@ -1380,6 +1471,7 @@ def main() -> None:
 
     user_prefs: dict[str, list[str] | None] = load_json(LAST_PREFS_FILE, {})
     notify_with_prefs(changes, current_locations, user_prefs)
+    send_x_post(changes, current_locations)
 
 
 def _build_daily_text(
