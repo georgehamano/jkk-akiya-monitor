@@ -14,6 +14,10 @@ on:
         description: "テスト送信（LINEにサンプル通知を送る）"
         type: boolean
         default: false
+      test_x:
+        description: "テスト送信（Xにサンプル投稿する）"
+        type: boolean
+        default: false
       daily:
         description: "日次レポート送信（在庫状況まとめ）"
         type: boolean
@@ -68,6 +72,8 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.test }}" = "true" ]; then
             python jkk_line_notify.py --test
+          elif [ "${{ github.event.inputs.test_x }}" = "true" ]; then
+            python jkk_line_notify.py --test-x
           elif [ "${{ github.event.inputs.daily }}" = "true" ] || [ "${{ github.event.schedule }}" = "15 23 * * *" ]; then
             python jkk_line_notify.py --daily
           else

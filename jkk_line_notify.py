@@ -1576,10 +1576,43 @@ def send_test_message() -> None:
         print("[WARN] テスト送信失敗（LINE設定を確認してください）。")
 
 
+def send_test_x_post() -> None:
+    """--test-x フラグ用: 現在の last_data.json の先頭1件を使って X にテスト投稿する。"""
+    ensure_data_dir()
+    saved = load_json(LAST_DATA_FILE, {})
+    saved_detail = load_json(LAST_DETAIL_FILE, {})
+    saved_locations = load_json(LAST_LOCATION_FILE, {})
+
+    if saved:
+        name, total = next(iter(saved.items()))
+        rooms = saved_detail.get(name, {})
+    else:
+        name, total, rooms = "テスト物件（サンプル）", 3, {"1K": 2, "2DK": 1}
+
+    test_change = {
+        "name": name,
+        "increase": 1,
+        "current_total": total,
+        "reason": "increase",
+        "detail_url": CHINTAI_URL,
+        "cur_rooms": rooms,
+        "prv_rooms": {k: max(0, v - 1) for k, v in rooms.items()},
+    }
+    text = build_x_post_text([test_change], saved_locations)
+    print(f"[INFO] X テスト投稿内容:\n{text}\n")
+    sent = send_x_post([test_change], saved_locations)
+    if sent:
+        print("[INFO] X テスト投稿成功。アカウントを確認してください。")
+    else:
+        print("[WARN] X テスト投稿失敗（X API設定を確認してください）。")
+
+
 if __name__ == "__main__":
     import sys
     if "--test" in sys.argv:
         send_test_message()
+    elif "--test-x" in sys.argv:
+        send_test_x_post()
     elif "--daily" in sys.argv:
         send_daily_report()
     else:
