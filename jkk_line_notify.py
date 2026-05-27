@@ -24,6 +24,8 @@ from bs4 import BeautifulSoup
 HOME_URL = "https://www.to-kousya.or.jp/"
 # 賃貸ポータル（Referer 用・ウォームアップ用）
 CHINTAI_URL = "https://www.to-kousya.or.jp/chintai/reco/index.html"
+# LINE通知本文に貼る空き家検索の入口URL（スマホからそのまま検索ページに飛べる）
+NOTIFY_URL = "https://jhomes.to-kousya.or.jp/search/jkknet/service/tosekoAkiyaJyoukenStartInit"
 # jhomes のルート https://jhomes.to-kousya.or.jp/ は 404 のため使わない
 JH_WARMUP_URL = "https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenStartInit"
 # 一覧取得先（空き家条件の検索結果は akiyaJyokenDirect。変更数だけ見る場合は AKIYAchangeCount 等）
@@ -1189,7 +1191,7 @@ def _build_change_block(c: dict[str, Any]) -> str:
 
 def build_line_messages(changes: list[dict[str, Any]]) -> list[dict[str, str]]:
     """変化リストを1通にまとめたLINEメッセージを返す（5000字超なら分割）。"""
-    url = CHINTAI_URL
+    url = NOTIFY_URL
     header = f"【JKK 空き家状況更新】{len(changes)}件\n"
     footer = f"\n詳細はこちら: {url}"
 
@@ -1409,7 +1411,7 @@ def _build_daily_text(
         for room, cnt in sorted(rooms.items()):
             lines.append(f"  {room}: {cnt}戸")
     lines.append(f"\n合計: {len(props)}物件 / {total_units}戸")
-    lines.append(f"詳細はこちら: {CHINTAI_URL}")
+    lines.append(f"詳細はこちら: {NOTIFY_URL}")
     return "\n".join(lines)
 
 
