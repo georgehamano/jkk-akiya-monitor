@@ -5,17 +5,11 @@ on:
     # cron-job.org が止まった時の保険（30分おき）
     # 通常は cron-job.org の workflow_dispatch キックが主トリガー
     - cron: "*/30 * * * *"
-    # 毎朝8時（JST）に日次レポートを送信（*/30 との重複を避けるため :00 ではなく 23:15 UTC）
-    - cron: "15 23 * * *"
   # cron-job.org（および手動）からのキック用
   workflow_dispatch:
     inputs:
       test:
         description: "テスト送信（LINEにサンプル通知を送る）"
-        type: boolean
-        default: false
-      daily:
-        description: "日次レポート送信（在庫状況まとめ）"
         type: boolean
         default: false
 
@@ -63,8 +57,6 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.test }}" = "true" ]; then
             python jkk_line_notify.py --test
-          elif [ "${{ github.event.inputs.daily }}" = "true" ] || [ "${{ github.event.schedule }}" = "15 23 * * *" ]; then
-            python jkk_line_notify.py --daily
           else
             # 40秒おきに4回ループ → 実質 ~1分間隔で監視（ジョブ全体4分以内）
             for i in 1 2 3 4; do
