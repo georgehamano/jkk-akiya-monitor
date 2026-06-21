@@ -1288,6 +1288,32 @@ def send_line_push_to_one(user_id: str, messages: list[dict[str, str]]) -> bool:
     return True
 
 
+def notifications_paused() -> bool:
+    """JKK_NOTIFY_PAUSE_UNTIL（JSTの日付 YYYY-MM-DD）が未来なら通知を一時停止する。
+
+    監視・状態保存は継続するため、指定日 0:00 JST 以降は前回比較の基準が最新の
+    まま自動的に通常通知へ再開する（溜まった差分が一括送信されることはない）。
+    LINE通数の月枠を使い切った月に、翌月初まで送信だけ止める用途。
+    """
+    import datetime
+
+    raw = os.getenv("JKK_NOTIFY_PAUSE_UNTIL", "").strip()
+    if not raw:
+        return False
+
+    jst = datetime.timezone(datetime.timedelta(hours=9))
+    try:
+        until = datetime.datetime.strptime(raw, "%Y-%m-%d").replace(tzinfo=jst)
+    except ValueError:
+        print(f"[WARN] JKK_NOTIFY_PAUSE_UNTIL の形式が不正です: {raw!r}（無視して通知します）")
+        return False
+
+    if datetime.datetime.now(jst) < until:
+        print(f"[INFO] 通知一時停止中（{raw} 0:00 JST まで）。監視・状態保存は継続します。")
+        return True
+    return False
+
+
 def notify_with_prefs(
     changes: list[dict[str, Any]],
     location_map: dict[str, str],
@@ -1299,6 +1325,10 @@ def notify_with_prefs(
     - null のユーザー → 全変化を multicast
     - 地域リストのユーザー → 一致する変化のみ push
     """
+    if notifications_paused():
+        print(f"[INFO] {len(changes)}件の変化を検知しましたが、一時停止中のため通知しません。")
+        return
+
     if not user_prefs:
         messages = build_line_messages(changes)
         sent = send_line_push(messages)
@@ -1418,6 +1448,9 @@ def _build_daily_text(
 def send_daily_report() -> None:
     """--daily フラグ用: 保存済みの在庫状況を日次レポートとして送信する。"""
     import datetime
+    if notifications_paused():
+        print("[INFO] 一時停止中のため日次レポートを送信しません。")
+        return
     ensure_data_dir()
     saved = load_json(LAST_DATA_FILE, {})
     saved_detail = load_json(LAST_DETAIL_FILE, {})

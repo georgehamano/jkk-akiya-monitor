@@ -52,6 +52,9 @@ jobs:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           # 状態ファイル保存先（リポジトリルート）
           JKK_DATA_DIR: ${{ github.workspace }}
+          # 通知一時停止（指定日 0:00 JST まで送信のみ停止。監視・状態保存は継続し自動再開）
+          # 6月分の通数を使い切ったため 2026-07-01 まで停止。再開後はこの行を削除してよい。
+          JKK_NOTIFY_PAUSE_UNTIL: "2026-07-01"
           # 必要に応じて詳細 URL を上書き
           JKK_DETAIL_VIEW_BASE: ${{ secrets.JKK_DETAIL_VIEW_BASE }}
         run: |
