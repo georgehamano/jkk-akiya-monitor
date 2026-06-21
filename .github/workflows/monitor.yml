@@ -88,7 +88,8 @@ jobs:
 
       - name: vacancies.json を公開リポジトリへ書き出し
         env:
-          JKK_DATA_PAT: ${{ secrets.JKK_DATA_PAT }}
+          # jkk-akiya-data への push 用 SSH デプロイキー（無期限。PATの失効対策）
+          JKK_DATA_DEPLOY_KEY: ${{ secrets.JKK_DATA_DEPLOY_KEY }}
         run: |
           # last_data.json と last_rooms_detail.json を vacancies.json に変換して push
           python - <<'PYEOF'
@@ -133,14 +134,21 @@ jobs:
           print("vacancies.json を生成しました。")
           PYEOF
 
-          # PAT が未設定なら skip
-          if [ -z "$JKK_DATA_PAT" ]; then
-            echo "JKK_DATA_PAT が未設定のため公開リポジトリへの書き出しをスキップします。"
+          # デプロイキーが未設定なら skip
+          if [ -z "$JKK_DATA_DEPLOY_KEY" ]; then
+            echo "JKK_DATA_DEPLOY_KEY が未設定のため公開リポジトリへの書き出しをスキップします。"
             exit 0
           fi
 
-          # jkk-akiya-data リポジトリへ push
-          REPO="https://github-actions[bot]:${JKK_DATA_PAT}@github.com/georgehamano/jkk-akiya-data.git"
+          # SSH デプロイキーをセットアップ
+          mkdir -p ~/.ssh
+          echo "$JKK_DATA_DEPLOY_KEY" > ~/.ssh/jkk_data_deploy
+          chmod 600 ~/.ssh/jkk_data_deploy
+          ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/jkk_data_deploy -o IdentitiesOnly=yes"
+
+          # jkk-akiya-data リポジトリへ SSH で push
+          REPO="git@github.com:georgehamano/jkk-akiya-data.git"
           WORKDIR=$(mktemp -d)
           git clone --depth 1 "$REPO" "$WORKDIR"
           cp vacancies.json "$WORKDIR/vacancies.json"
