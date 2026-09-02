@@ -24,8 +24,9 @@ from bs4 import BeautifulSoup
 HOME_URL = "https://www.to-kousya.or.jp/"
 # 賃貸ポータル（Referer 用・ウォームアップ用）
 CHINTAI_URL = "https://www.to-kousya.or.jp/chintai/reco/index.html"
-# LINE通知本文に貼る空き家検索の入口URL（スマホからそのまま検索ページに飛べる）
-NOTIFY_URL = "https://jhomes.to-kousya.or.jp/search/jkknet/service/tosekoAkiyaJyoukenStartInit"
+# LINE通知本文に貼るURL。自サイトの転送ページ経由でJKK公式の「先着順あき家 検索結果」に
+# popup無し・同一ウィンドウで直接着地する（jhomesへ素のGETすると中間ページのpopupで固まるため）。
+NOTIFY_URL = "https://jkk-akiya.com/jkk-search.html"
 # jhomes のルート https://jhomes.to-kousya.or.jp/ は 404 のため使わない
 JH_WARMUP_URL = "https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyoukenStartInit"
 # 一覧取得先（空き家条件の検索結果は akiyaJyokenDirect。変更数だけ見る場合は AKIYAchangeCount 等）
