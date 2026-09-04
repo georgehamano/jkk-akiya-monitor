@@ -206,5 +206,37 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480170/548017000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480170/A1742-HL2-3LDK.gif"
     ]
+  },
+  "南砂": {
+    "total_units": "2778",
+    "floors": "地上１４階建",
+    "term": "10年間",
+    "built": "1975/03/10 他",
+    "transport": "東京メトロ東西線東陽町駅徒歩4～10分",
+    "notes": "※給湯は浴室のみです。(リニューアル住戸のみ給湯は3ヶ所です。) ※キッチンには小型湯沸器を設置可能ですが、設置する場合はお客様の負担となります。 ※敷地内に保育園、幼稚園、児童館、高齢者在宅サービスセンター、医療施設、金融機関、店舗等があります。 ※コインパーキングがあります。※持ち込みができる家具等の大きさに制限があります。※敷地内が江東区の広 域避難場所に指定されています。※CATVがご利用いただけません。※共用部に防犯カメラが設置されております",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0880080/0880080000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0880080/088008000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0880080/088008000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0880080/088008000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0880080/088008000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0880080/A1071-V3-2DK.gif"
+    ]
+  },
+  "堀江": {
+    "total_units": "865",
+    "floors": "地上８階建",
+    "term": "10年間",
+    "built": "1975/10/31",
+    "transport": "ＪＲ京葉線葛西臨海公園駅バス5分堀江団地徒歩1～3分 東京メトロ東西線葛西駅バス8分堀江団地徒歩1～3分 東京メトロ東西線西葛西駅バス10分堀江団地入口徒歩1～3分 東京メトロ東西線西葛西駅バス11分堀江団地徒歩1～3分",
+    "notes": "※給湯はリニューアル住戸のみ３ヶ所です。（他は２ヶ所です） ※敷地内に保育園、子育てひろば、交番があります。 ※コインパーキングがあります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380050/2380050000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380050/238005000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380050/238005000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380050/238005000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380050/238005000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380050/A1161-V-2DK.gif"
+    ]
   }
 }
