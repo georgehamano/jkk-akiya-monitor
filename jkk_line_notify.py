@@ -14,6 +14,7 @@ import html as html_module
 import json
 import os
 import re
+import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
@@ -54,6 +55,12 @@ LAST_IMAGES_FILE = DATA_DIR / "last_images.json"    # 物件名 -> 外観画像U
 LAST_LOCATION_FILE = DATA_DIR / "last_location.json"    # 物件名 -> 地域
 LAST_RATES_FILE = DATA_DIR / "last_rates.json"      # 物件名 -> 間取り -> {area, rent, fee}
 LAST_PREFS_FILE = DATA_DIR / "user_prefs.json"      # LINEユーザーID -> 地域リスト | null
+LAST_DETAILS_FILE = DATA_DIR / "last_details.json"  # 物件名 -> 詳細情報（交通/築年/画像複数 等）
+
+# 物件詳細ページ（akiyaSenDet）: 交通・築年・複数画像などを取得する
+DETAIL_ENDPOINT = "https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaSenDet"
+# 1回の実行で新規に詳細取得する物件数の上限（スクレイピング負荷の分散用）
+MAX_DETAIL_FETCH_PER_RUN = int(os.getenv("JKK_MAX_DETAIL_FETCH", "8"))
 
 HEADERS = {
     "User-Agent": (
@@ -1081,6 +1088,168 @@ def build_rates_map(
     return result
 
 
+def extract_detail_tokens(list_html: str) -> tuple[str, str, str]:
+    """一覧（検索結果）ページHTMLから、詳細POSTに必要なトークンを抽出する。
+    戻り値: (token, abcde, jklm/xyz)。取れない場合は空文字。"""
+    m_token = re.search(r'name=token value="([0-9A-Fa-f]+)"', list_html)
+    m_abcde = re.search(r'name="abcde" value="([0-9A-Fa-f]+)"', list_html)
+    m_xyz = re.search(r'xyz\.value\s*=\s*"([0-9A-Fa-f]+)"', list_html)
+    return (
+        m_token.group(1) if m_token else "",
+        m_abcde.group(1) if m_abcde else "",
+        m_xyz.group(1) if m_xyz else "",
+    )
+
+
+def parse_detail_page(html: str) -> dict[str, Any]:
+    """物件詳細ページHTMLから、表示用の情報と複数画像URLを抽出する。"""
+    soup = BeautifulSoup(html, "html.parser")
+    cells = [c.get_text(" ", strip=True) for c in soup.find_all(["td", "th"])]
+    # ラベルセルの直後セルを値として拾う
+    label_map = {
+        "総戸数": "total_units",
+        "階層": "floors",
+        "定借期限・期間": "term",
+        "竣工年月日": "built",
+        "交通": "transport",
+        "特記事項": "notes",
+    }
+    info: dict[str, Any] = {}
+    for i, txt in enumerate(cells):
+        key = label_map.get(txt)
+        if key and key not in info and i + 1 < len(cells):
+            val = cells[i + 1].strip()
+            if val:
+                info[key] = val[:400]
+
+    # 画像（mz_copyright配下の写真・間取り図。copy.gif は除外、重複除去・順序維持）
+    images: list[str] = []
+    for m in re.findall(
+        r'https?://[^"\' ]*/mz_copyright/[^"\' ]+\.(?:jpg|jpeg|png|gif)', html, re.I
+    ):
+        if "copy.gif" in m.lower():
+            continue
+        if m not in images:
+            images.append(m)
+    info["images"] = images
+    return info
+
+
+AKIYA_DIRECT_URL = (
+    "https://jhomes.to-kousya.or.jp/search/jkknet/service/akiyaJyokenDirect"
+)
+
+
+def load_detail_grid(session: requests.Session) -> str:
+    """詳細取得用に akiyaJyokenDirect の検索結果グリッドをセッションへ読み込み、
+    トークンを含む一覧HTMLを返す。一覧取得が AKIYAchangeCount 等に遷移していても、
+    ここで先着順あき家のグリッドをセッションに再確立してから詳細を引く。"""
+    res = session.post(
+        AKIYA_DIRECT_URL,
+        data={"redirect": "true", "url": AKIYA_DIRECT_URL},
+        timeout=30,
+        headers={**HEADERS, "Referer": AKIYA_DIRECT_URL},
+    )
+    res.raise_for_status()
+    return decode_html_response(res)
+
+
+def fetch_property_detail(
+    session: requests.Session,
+    tokens: tuple[str, str, str],
+    sen_args: list[str],
+) -> dict[str, Any] | None:
+    """senPage 引数（[boshuNo, mskKbn, jyutakuCd, yusenKbn]）から
+    詳細ページを POST 取得して解析する。失敗時は None。"""
+    token, abcde, xyz = tokens
+    p1, p2, p3, p4 = (list(sen_args) + ["", "", "", ""])[:4]
+    data = {
+        "akiyaRefRM.akiyaDatM.boshuNo": p1,
+        "akiyaRefRM.akiyaDatM.mskKbn": p2,
+        "akiyaRefRM.akiyaDatM.jyutakuCd": p3,
+        "akiyaRefRM.akiyaDatM.yusenKbn": p4,
+        "token": token,
+        "abcde": abcde,
+        "jklm": xyz,
+        "sen_flg": "1",
+        "pagingInputDataGrid_url": "AKIYA",
+        "pagingInputDataGrid_scope": "session",
+        "pagingInputDataGrid_name": "AKIYA_GRID",
+        "pagingInputDataGrid_id": "0",
+    }
+    res = session.post(
+        DETAIL_ENDPOINT,
+        data=data,
+        timeout=30,
+        headers={**HEADERS, "Referer": TARGET_URL},
+    )
+    res.raise_for_status()
+    html = decode_html_response(res)
+    # エラー/おわびページ、または詳細ページでない場合はスキップ
+    if "おわび" in html or "住戸情報の確認" not in html:
+        return None
+    return parse_detail_page(html)
+
+
+def build_details_map(
+    session: requests.Session,
+    rows: list[dict[str, Any]],
+    prev: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """物件名 -> 詳細情報 のマップを構築する。
+    詳細（交通・築年・画像等）はほぼ変化しないため、
+    キャッシュ済み（画像取得済み）の物件はスキップし、未取得のみ取得する。
+    1回の実行での取得数は MAX_DETAIL_FETCH_PER_RUN で制限し負荷を分散する。"""
+    result: dict[str, dict[str, Any]] = {k: dict(v) for k, v in prev.items()}
+
+    # 物件名 -> senPage 引数（最初に見つかったもの）
+    name_to_sen: dict[str, list[str]] = {}
+    for r in rows:
+        name = str(r["name"])
+        sen = str(r.get("senpage") or "")
+        if name not in name_to_sen and sen:
+            name_to_sen[name] = sen.split(",")
+
+    # 未取得の物件のみ対象
+    targets = [
+        (n, s)
+        for n, s in name_to_sen.items()
+        if not (result.get(n) or {}).get("images")
+    ]
+    if not targets:
+        return result
+
+    # 詳細取得用グリッドをセッションに確立し、トークンを取得
+    try:
+        list_html = load_detail_grid(session)
+    except requests.RequestException as exc:
+        print(f"[WARN] 詳細用グリッドの取得に失敗（詳細更新をスキップ）: {exc}")
+        return result
+    tokens = extract_detail_tokens(list_html)
+    if not tokens[0]:
+        print("[WARN] 詳細用トークンを取得できず（詳細更新をスキップ）")
+        return result
+
+    fetched = 0
+    for name, sen in targets:
+        if fetched >= MAX_DETAIL_FETCH_PER_RUN:
+            break
+        try:
+            info = fetch_property_detail(session, tokens, sen)
+        except requests.RequestException as exc:
+            print(f"[WARN] 詳細取得失敗 {name}: {exc}")
+            continue
+        if info:
+            result[name] = info
+            fetched += 1
+            print(f"[INFO] 詳細取得: {name}（画像{len(info.get('images', []))}枚）")
+            time.sleep(1.2)  # JKKサイトへの負荷配慮
+
+    if fetched:
+        print(f"[INFO] 詳細情報を{fetched}件更新（キャッシュ済みはスキップ）")
+    return result
+
+
 def load_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
@@ -1406,6 +1575,15 @@ def main() -> None:
     save_json(LAST_IMAGES_FILE, current_images)
     save_json(LAST_LOCATION_FILE, current_locations)
     save_json(LAST_RATES_FILE, current_rates)
+
+    # 物件詳細（交通・築年・複数画像 等）を新規物件のみ取得してキャッシュ更新。
+    # 詳細取得の失敗は通知フロー全体を止めない。
+    try:
+        prev_details = load_json(LAST_DETAILS_FILE, {})
+        current_details = build_details_map(session, rows, prev_details)
+        save_json(LAST_DETAILS_FILE, current_details)
+    except Exception as exc:  # noqa: BLE001 詳細取得は best-effort
+        print(f"[WARN] 詳細情報の取得でエラー（無視して継続）: {exc}")
 
     if not changes:
         print("[INFO] 在庫増・新規・内訳入れ替わりはありません。")

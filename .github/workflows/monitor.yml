@@ -77,7 +77,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # 状態ファイルに変更があるか確認
-          git add last_data.json last_rooms.json last_rooms_detail.json last_images.json last_location.json last_rates.json 2>/dev/null || true
+          git add last_data.json last_rooms.json last_rooms_detail.json last_images.json last_location.json last_rates.json last_details.json 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "状態ファイルに変更なし。コミットをスキップします。"
@@ -110,6 +110,8 @@ jobs:
           locations = json.loads(location_file.read_text(encoding="utf-8")) if location_file.exists() else {}
           rates_file = pathlib.Path("last_rates.json")
           rates = json.loads(rates_file.read_text(encoding="utf-8")) if rates_file.exists() else {}
+          details_file = pathlib.Path("last_details.json")
+          details = json.loads(details_file.read_text(encoding="utf-8")) if details_file.exists() else {}
 
           properties = []
           for name, total in data.items():
@@ -120,6 +122,14 @@ jobs:
                   prop["location"] = locations[name]
               if name in rates:
                   prop["room_details"] = rates[name]
+              # 詳細情報（交通/築年/階層/総戸数/定借/特記事項/複数画像）をマージ
+              d = details.get(name)
+              if d:
+                  for k in ("transport", "built", "floors", "total_units", "term", "notes"):
+                      if d.get(k):
+                          prop[k] = d[k]
+                  if d.get("images"):
+                      prop["images"] = d["images"]
               properties.append(prop)
 
           jst = datetime.timezone(datetime.timedelta(hours=9))
