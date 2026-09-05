@@ -540,5 +540,37 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5580010/558001000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5580010/L0881-BD-2DK_diy.gif"
     ]
+  },
+  "蓮根三丁目": {
+    "total_units": "99",
+    "floors": "地上１１階建",
+    "term": "定期借家契約ではありません",
+    "built": "1978/08/05",
+    "transport": "都営地下鉄三田線西台駅徒歩8分",
+    "notes": "※周辺には工場等があり、騒音・臭気等の影響が予想されます。 ※給湯は２ヶ所です。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980170/1980170003.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980170/198017000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980170/198017000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980170/198017000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980170/198017000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980170/A1231-H-3DK.gif"
+    ]
+  },
+  "コーシャハイム光が丘第三": {
+    "total_units": "157",
+    "floors": "地上１４階建",
+    "term": "定期借家契約ではありません",
+    "built": "1986/03/15",
+    "transport": "都営地下鉄大江戸線光が丘駅徒歩7分 西武池袋線練馬高野台駅バス20分光が丘三丁目徒歩4分 東京メトロ有楽町線地下鉄成増駅バス21分光が丘三丁目徒歩4分 東京メトロ副都心線地下鉄成増駅バス21分光が丘三丁目徒歩4分 東武東上線成増駅バス21分光が丘三丁目徒歩4分",
+    "notes": "※熱給湯システム（東京熱供給株式会社）採用につき、別途使用料が必要です。 ※1階部分に幼稚園があります。 ※当住宅の管理員はコーシャハイム光が丘第四の管理も行っております。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2080080/2080080005.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2080080/208008000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2080080/208008000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2080080/208008000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2080080/208008000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2080080/A1532-HW-3DK.gif"
+    ]
   }
 }
