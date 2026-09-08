@@ -747,5 +747,69 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5180020/518002000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5180020/A0941-BN-2DK.gif"
     ]
+  },
+  "前野町第二": {
+    "total_units": "196",
+    "floors": "地上１０階建",
+    "term": "10年間",
+    "built": "1973/08/30",
+    "transport": "東武東上線ときわ台駅徒歩14分",
+    "notes": "※給湯はリフレッシュ住戸のみ３ヶ所です。（他は２ヶ所です）",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980160/1980160000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980160/198016000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980160/198016000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980160/198016000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980160/198016000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980160/A1031-V-2DK.gif"
+    ]
+  },
+  "森野": {
+    "total_units": "433",
+    "floors": "地上５階建",
+    "term": "2030/06/30",
+    "built": "1963/04/05",
+    "transport": "小田急小田原線町田駅徒歩5～7分 ＪＲ横浜線町田駅徒歩5～8分",
+    "notes": "※航空機による騒音が予想されます（不定期）。 ※給湯はリフレッシュ住戸のみ３ヶ所です。（他は２ヶ所です）",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3980060/3980060000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3980060/398006000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3980060/398006000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3980060/398006000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3980060/398006000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3980060/L0671-C-2K.gif"
+    ]
+  },
+  "平山": {
+    "total_units": "832",
+    "floors": "地上５階建",
+    "term": "5年間",
+    "built": "1965/02/06",
+    "transport": "京王京王線平山城址公園駅徒歩7～10分 ＪＲ中央線豊田駅徒歩15～19分",
+    "notes": "※給湯はリフレッシュ住戸のみ３ヶ所です。（他は２ヶ所です） ※敷地内に駐在所、保育園、店舗等があります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4280020/4280020000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4280020/428002000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4280020/428002000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4280020/428002000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4280020/428002000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4280020/L0764-F-3K.gif"
+    ]
+  },
+  "久留米下里": {
+    "total_units": "685",
+    "floors": "地上５階建",
+    "term": "5年間",
+    "built": "1973/03/18",
+    "transport": "西武池袋線清瀬駅バス13分下里団地徒歩1～4分 西武新宿線花小金井駅バス26分下里団地徒歩1～4分",
+    "notes": "※給湯はリフレッシュ住戸のみ３ヶ所です。（他は２ヶ所です）※敷地内に保育園、店舗等があります。 ※コインパーキングがあります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/5280030000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/528003000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/528003000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/528003000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/528003000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/A1001-BN-2DK.gif"
+    ]
   }
 }
