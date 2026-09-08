@@ -811,5 +811,53 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/528003000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5280030/A1001-BN-2DK.gif"
     ]
+  },
+  "烏山北": {
+    "total_units": "365",
+    "floors": "地上５階建",
+    "term": "2031/11/30",
+    "built": "1966/02/05 他",
+    "transport": "京王京王線千歳烏山駅徒歩13～20分 京王井の頭線富士見ヶ丘駅徒歩14～18分 京王井の頭線久我山駅徒歩14～22分",
+    "notes": "※高速道路に面した住戸は日照の影響と騒音が予想されます。 ※保育園・店舗等があります。 ※給湯はリフレッシュ住戸（１２、１３、１４号棟の一部）のみ３ヶ所です。（他は２ヶ所です）",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280230/1280230000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280230/128023000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280230/128023000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280230/128023000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280230/128023000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280230/L0791-C-2K.gif"
+    ]
+  },
+  "コーシャハイム久我山": {
+    "total_units": "351",
+    "floors": "地上５階建",
+    "term": "25年間",
+    "built": "2012/03/29",
+    "transport": "京王井の頭線久我山駅徒歩12分",
+    "notes": "※LW（2LDK)タイプは高齢の方や車イスを使用している方に、より配慮した設備・仕様となっています。 （IH調理器・温水洗浄便座等） ※Ｄ・Ｅ棟は温水洗浄便座・モニター付きインターホンが設置されています。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280850/1280850000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280850/128085000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280850/128085000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280850/128085000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280850/128085000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280850/L8372-AL2-1LDK.gif"
+    ]
+  },
+  "愛宕第二": {
+    "total_units": "75",
+    "floors": "地上１１階建",
+    "term": "5年間",
+    "built": "1973/06/10",
+    "transport": "多摩都市モノレール多摩都市モノレール松が谷駅徒歩11分 京王相模原線京王多摩センター駅徒歩16～18分 小田急多摩線小田急多摩センター駅徒歩16～18分 多摩都市モノレール多摩都市モノレール多摩センター駅徒歩16～18分 京王相模原線京王多摩センター駅バス14分愛宕四丁目徒歩2分\r\n\t\t\t\t\t\t\t\r\n\t\t\t\t\t\t\t 他",
+    "notes": "※給湯は２ヶ所です。 ※VR1タイプの住戸バルコニーには、耐震補強のための鉄骨ブレース（斜材）が設置されており、日常的に バルコニーとして使用できません。※１、２階部分に医療施設、金融機関、店舗等があります。 ※当住宅のフロントスタッフはコーシャハイム愛宕四丁目の管理も行っています。 ※コインパーキングがあります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480050/5480050001.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480050/548005000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480050/548005000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480050/548005000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480050/548005000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480050/A1021-V-2DK.gif"
+    ]
   }
 }
