@@ -1035,5 +1035,37 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3580010/358001000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3580010/A0891-B-2DK.gif"
     ]
+  },
+  "コーシャハイム神宮前五丁目": {
+    "total_units": "60",
+    "floors": "地上３階建",
+    "term": "15年間",
+    "built": "1994/11/24",
+    "transport": "東京メトロ千代田線明治神宮前駅徒歩7分 東京メトロ副都心線明治神宮前駅徒歩7分 ＪＲ山手線原宿駅徒歩11分 ＪＲ山手線渋谷駅徒歩14分",
+    "notes": "※リニューアル住戸には、ビルトインコンロ、温水洗浄便座、モニター付きインターホンを設置しています。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1380100/1380100_00_202108.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1380100/138010000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1380100/138010000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1380100/138010000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1380100/138010000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1380100/H8021-ALR2-1LDK.gif"
+    ]
+  },
+  "中台町": {
+    "total_units": "400",
+    "floors": "地上５階建",
+    "term": "2031/11/30",
+    "built": "1962/11/07",
+    "transport": "東武東上線上板橋駅徒歩13～16分",
+    "notes": "※給湯は２ヶ所です。 土砂災害防止法に基づき、敷地の一部が土砂災害警戒区域に指定されています。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980080/1980080999.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980080/198008000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980080/198008000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980080/198008000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980080/198008000e.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980080/L0632-C-2K.gif"
+    ]
   }
 }
