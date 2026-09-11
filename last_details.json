@@ -1099,5 +1099,36 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580160/058016000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580160/L8316-V4-2DK.gif"
     ]
+  },
+  "南烏山三丁目": {
+    "total_units": "40",
+    "floors": "地上５階建",
+    "term": "10年間",
+    "built": "1973/10/01",
+    "transport": "京王京王線芦花公園駅徒歩4分",
+    "notes": "※給湯はリフレッシュ住宅のみ３ヶ所です。（他は２ヶ所です）",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280100/1280100000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280100/128010000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280100/128010000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280100/128010000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280100/128010000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280100/L1041-I-3K.gif"
+    ]
+  },
+  "トミンハイム南台三丁目": {
+    "total_units": "59",
+    "floors": "地上８～１１階建",
+    "term": "定期借家契約ではありません",
+    "built": "2001/02/20",
+    "transport": "東京メトロ丸ノ内線中野富士見町駅徒歩12分 東京メトロ丸ノ内線方南町駅徒歩12分",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1480271/1480271001.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1480271/148027100a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1480271/148027100b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1480271/148027100c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1480271/148027100d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1480271/A8072-V-2DK.gif"
+    ]
   }
 }
