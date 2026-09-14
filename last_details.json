@@ -1178,5 +1178,37 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280820/128082000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1280820/L8253-V1-2DK.gif"
     ]
+  },
+  "小金井貫井": {
+    "total_units": "350",
+    "floors": "地上５階建",
+    "term": "5年間",
+    "built": "1963/11/06",
+    "transport": "ＪＲ中央線武蔵小金井駅バス17分貫井南町二丁目徒歩4～7分",
+    "notes": "※給湯は2ヶ所です。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080020/4080020002.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080020/4080020003.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080020/4080020005.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080020/4080020006.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080020/4080020007.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080020/A0732-C-2K.gif"
+    ]
+  },
+  "カーメスト武蔵小金井": {
+    "total_units": "244",
+    "floors": "地上７階建",
+    "term": "25年間",
+    "built": "2024/10/31",
+    "transport": "ＪＲ中央線武蔵小金井駅徒歩16分 ＪＲ中央線武蔵小金井駅バス9分本町住宅徒歩3分",
+    "notes": "カーメスト武蔵小金井（シニア住宅）と一緒に駐車場、バイク駐車場を利用します。　住宅敷地、階段、廊下、 バルコニー等の共用部を禁煙とし、W棟以外の住棟では、専有部（各住戸内）も禁煙としています。 当住宅ではソニーネットワークコミュニケーションズコネクト（株）が提供するインターネット設備 （Wi-Fi機能付）が導入されています。入居された日からインターネットがご利用いただけます。 電気自動車区画は当社の指定する事業者と充電設備の利用契約を締結していただきます。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080120/4080120001.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080120/408012000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080120/408012000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080120/408012000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080120/408012000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/4080120/L8834-AL1-1LDK.gif"
+    ]
   }
 }
