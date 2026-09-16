@@ -1291,5 +1291,53 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0480171/048017100d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0480171/L8031-AL1-1LDK.gif"
     ]
+  },
+  "宇喜田第一": {
+    "total_units": "362",
+    "floors": "地上１０階建",
+    "term": "10年間",
+    "built": "1970/04/01",
+    "transport": "東京メトロ東西線西葛西駅徒歩16～17分 東京メトロ東西線葛西駅バス11分宇喜田第一住宅徒歩2～3分 都営地下鉄新宿線船堀駅バス8分宇喜田第一住宅徒歩2～3分",
+    "notes": "※給湯はリフレッシュ住戸のみ３ヶ所です。（他は２ヶ所です）",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380010/2380010000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380010/238001000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380010/238001000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380010/238001000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380010/238001000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380010/L0961-W-2DK.gif"
+    ]
+  },
+  "春江町": {
+    "total_units": "399",
+    "floors": "地上１１階建",
+    "term": "10年間",
+    "built": "1972/06/10",
+    "transport": "都営地下鉄新宿線瑞江駅徒歩17～18分 都営地下鉄新宿線一之江駅バス11分京葉口徒歩2～4分 都営地下鉄新宿線瑞江駅バス12分京葉口徒歩2～4分 ＪＲ総武線小岩駅バス23分京葉口徒歩2～4分",
+    "notes": "※給湯はリフレッシュ住戸は３ヶ所です。（他は２ヶ所です） ※建物の耐震改修工事に伴い、一部住戸のバルコニー及び窓の外側に耐震構造材（斜材）を設置しているため、 眺望・採光等への影響があります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380020/2380020000[1].jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380020/238002000a[1].jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380020/238002000b[1].jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380020/238002000c[1].jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380020/238002000d[1].jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380020/G0971-V-2DK.gif"
+    ]
+  },
+  "コーシャハイム清新": {
+    "total_units": "322",
+    "floors": "地上１１階建",
+    "term": "定期借家契約ではありません",
+    "built": "1983/01/19",
+    "transport": "東京メトロ東西線西葛西駅徒歩10～12分",
+    "notes": "※当住宅北西側に鉄橋があり電車による騒音が予想されます。 ※敷地内ににコミュニティ会館、保育園があります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380120/2380120000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380120/238012000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380120/238012000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380120/238012000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380120/238012000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380120/A1421-H-3DK.gif"
+    ]
   }
 }
