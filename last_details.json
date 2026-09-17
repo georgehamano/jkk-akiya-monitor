@@ -1387,5 +1387,53 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0480190/048019000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0480190/L8111-ALA-1LDK.gif"
     ]
+  },
+  "コーシャハイム加賀": {
+    "total_units": "78",
+    "floors": "地上８階建",
+    "term": "25年間",
+    "built": "2015/08/31",
+    "transport": "ＪＲ埼京線十条駅徒歩8分 都営地下鉄三田線板橋区役所前駅徒歩15分",
+    "notes": "※敷地東側に隣接して学校があります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980350/1980350001.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980350/198035000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980350/198035000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980350/198035000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980350/198035000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1980350/L8702-A1-1DK.gif"
+    ]
+  },
+  "八王子泉町": {
+    "total_units": "291",
+    "floors": "地上５階建",
+    "term": "5年間",
+    "built": "1972/02/01",
+    "transport": "ＪＲ中央線西八王子駅バス27分泉町住宅徒歩1～3分 ＪＲ中央線八王子駅バス24分四谷中入口徒歩3～5分 ＪＲ横浜線八王子駅バス24分四谷中入口徒歩3～5分 ＪＲ八高線八王子駅バス24分四谷中入口徒歩3～5分 京王京王線京王八王子駅バス29分四谷中入口徒歩3～5分",
+    "notes": "※給湯は２ヶ所です。 ※横田基地を使用する航空機による騒音が予想されます。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180040/3180040000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180040/3180040003.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180040/3180040005.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180040/3180040006.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180040/3180040007.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180040/A0911-BN-2DK.gif"
+    ]
+  },
+  "トミンハイム鑓水": {
+    "total_units": "300",
+    "floors": "１０階建",
+    "term": "定期借家契約ではありません",
+    "built": "1998/02/27",
+    "transport": "京王相模原線南大沢駅徒歩17～20分 京王相模原線南大沢駅バス7分三徳プラザ前徒歩2～5分 京王相模原線南大沢駅バス9分児童公園徒歩2～4分",
+    "notes": "※横田基地を使用する航空機による騒音が予想されます。 ※テレビ受信について別途ケーブルテレビ会社との契約が必要です。（有料） ※３号棟にエレベーターはありません。　※コインパーキングがあります。 ※カーシェアリングを設置しています。　※駐車場シェアリング（予約制駐車場）区画があります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180450/3180450000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180450/318045000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180450/318045000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180450/318045000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180450/318045000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/3180450/T0312-V2-2DK_2.gif"
+    ]
   }
 }
