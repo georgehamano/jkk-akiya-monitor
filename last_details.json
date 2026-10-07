@@ -1754,5 +1754,53 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480030/548003000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/5480030/A0931-V-2DK.gif"
     ]
+  },
+  "東葛西第一": {
+    "total_units": "291",
+    "floors": "地上９階建",
+    "term": "定期借家契約ではありません",
+    "built": "1982/01/25",
+    "transport": "東京メトロ東西線葛西駅徒歩14分",
+    "notes": "※当住宅のフロントスタッフは東葛西第二住宅の管理も行っております。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380111/2380111001.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380111/238011100a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380111/238011100b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380111/238011100c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380111/238011100d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380111/A1371-H-3DK.gif"
+    ]
+  },
+  "コーシャハイム小松川一丁目": {
+    "total_units": "396",
+    "floors": "地上１１階建",
+    "term": "定期借家契約ではありません",
+    "built": "1988/12/15",
+    "transport": "都営地下鉄新宿線東大島駅徒歩2分",
+    "notes": "※保育園があります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380150/2380150000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380150/238015000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380150/238015000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380150/238015000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380150/238015000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380150/A1601-L-2LDK.gif"
+    ]
+  },
+  "コーシャハイム臨海町二丁目": {
+    "total_units": "296",
+    "floors": "地上１４階建",
+    "term": "定期借家契約ではありません",
+    "built": "1989/01/31",
+    "transport": "ＪＲ京葉線葛西臨海公園駅徒歩20～22分 東京メトロ東西線西葛西駅バス14分紅葉川高校前徒歩2～3分 東京メトロ東西線西葛西駅バス14分臨海町二丁目団地前徒歩2～3分",
+    "notes": "※エレベータの停止階は７号棟：１・４・７・１０・１３階、８号棟：各階、９号棟：１・４・７・１０階です ※コミュニティ会館・店舗等があります。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380160/2380160000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380160/238016000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380160/238016000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380160/238016000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380160/238016000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380160/A1612-H-3DK_7_9.gif"
+    ]
   }
 }
