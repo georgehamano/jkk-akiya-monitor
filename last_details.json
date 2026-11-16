@@ -2072,5 +2072,37 @@
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380410/238041000d.jpg",
       "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/2380410/T0321-L1-2LDK.gif"
     ]
+  },
+  "コーシャハイム小日向": {
+    "total_units": "77",
+    "floors": "地上８階",
+    "term": "25年間",
+    "built": "2005/11/08",
+    "transport": "東京メトロ有楽町線江戸川橋駅徒歩10分 東京メトロ丸ノ内線茗荷谷駅徒歩11分",
+    "notes": "※当住宅の北・東側には東京メトロの車庫および線路があり、電車による騒音等が予想されます。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580150/0580150001.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580150/058015000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580150/058015000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580150/058015000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580150/058015000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/0580150/L8201-C4-2K.gif"
+    ]
+  },
+  "コーシャハイム南蒲田": {
+    "total_units": "241",
+    "floors": "地上９階建",
+    "term": "25年間",
+    "built": "2003/12/10",
+    "transport": "京浜急行京浜急行線京急蒲田駅徒歩9～10分 京浜急行京浜急行空港線糀谷駅徒歩7～9分",
+    "notes": "※住宅近隣には工場等があり、臭気や騒音が予想されます。 ※駐車場は改修工事をしています。（令和10年3月完了予定）工事期間中は新規募集を停止しています。",
+    "images": [
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1180460/1180460000.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1180460/118046000a.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1180460/118046000b.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1180460/118046000c.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1180460/118046000d.jpg",
+      "https://jhomes.to-kousya.or.jp/mz_copyright/mobile/1180460/L8141-C2A-2K.gif"
+    ]
   }
 }
